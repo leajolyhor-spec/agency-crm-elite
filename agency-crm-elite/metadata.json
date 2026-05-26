@@ -1,6 +1,0 @@
-{
-  "name": "Agency CRM Elite",
-  "description": "Un CRM moderne pour agences avec gestion des leads, dashboard analytique et suivi des actions commerciales.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
