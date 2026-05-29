@@ -27,7 +27,7 @@
             <span class="font-bold text-sm text-white tracking-wide">ELITECRM CABINET</span>
             <span class="text-[9px] text-slate-500 uppercase tracking-widest">Production Agence</span>
         </div>
-        <button onclick="toggleMobileMenu()" class="p-2 text-slate-400 hover:text-white font-bold text-xl">
+        <button onclick="toggleMenu()" class="p-2 text-slate-400 hover:text-white font-bold text-2xl focus:outline-none">
             ☰
         </button>
     </div>
@@ -43,19 +43,19 @@
                 <button onclick="window.location.reload()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-blue-500 bg-[#1e293b]/40 border-l-4 border-blue-500">
                     📊 TABLEAU DE BORD
                 </button>
-                <button onclick="toggleMobileMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
                     👥 OPPORTUNITÉS
                 </button>
-                <button onclick="toggleMobileMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
                     💼 PORTEFEUILLE
                 </button>
-                <button onclick="toggleMobileMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
                     💳 FACTURATION
                 </button>
-                <button onclick="toggleMobileMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
                     📅 PLANNING
                 </button>
-                <button onclick="toggleMobileMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
                     📈 STATISTIQUES
                 </button>
             </nav>
@@ -71,7 +71,7 @@
             </div>
         </aside>
 
-        <div id="sidebar-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/60 z-30 hidden lg:hidden"></div>
+        <div id="sidebar-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/60 z-30 hidden lg:hidden"></div>
 
         <main class="flex-1 p-4 lg:p-8 overflow-x-hidden w-full">
             <div class="max-w-7xl mx-auto space-y-6">
@@ -166,10 +166,13 @@
     </div>
 
     <script>
-        function toggleMobileMenu() {
+        // La fonction unique et corrigée pour ouvrir/fermer la sidebar
+        function toggleMenu() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebar-overlay').classList.toggle('hidden');
         }
+
+        // Changement de compte
         function toggleProfile() {
             let nameElem = document.getElementById('prof-name');
             let roleElem = document.getElementById('prof-role');
