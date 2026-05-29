@@ -18,6 +18,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #070a13; }
+        .active-menu { background-color: rgba(30, 41, 59, 0.5); color: #3b82f6; border-left: 4px solid #3b82f6; }
     </style>
 </head>
 <body class="bg-[#070a13] text-slate-100 antialiased min-h-screen">
@@ -40,28 +41,28 @@
             </div>
             
             <nav class="flex-1 py-4 space-y-1">
-                <button onclick="window.location.reload()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-blue-500 bg-[#1e293b]/40 border-l-4 border-blue-500">
+                <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="dashboard">
                     📊 TABLEAU DE BORD
                 </button>
-                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="switchView('opportunites')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="opportunites">
                     👥 OPPORTUNITÉS
                 </button>
-                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="switchView('portefeuille')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="portefeuille">
                     💼 PORTEFEUILLE
                 </button>
-                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="switchView('facturation')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="facturation">
                     💳 FACTURATION
                 </button>
-                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="switchView('planning')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="planning">
                     📅 PLANNING
                 </button>
-                <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200">
+                <button onclick="switchView('statistiques')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="statistiques">
                     📈 STATISTIQUES
                 </button>
             </nav>
 
             <div class="p-4 border-t border-slate-800/40 bg-[#090d16]">
-                <div class="flex items-center gap-3 cursor-pointer" onclick="toggleProfile()">
+                <div class="flex items-center gap-3 cursor-pointer p-1.5 rounded-lg hover:bg-slate-800/40" onclick="toggleProfile()">
                     <div class="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center text-sm">👩‍💻</div>
                     <div>
                         <p id="prof-name" class="text-xs font-bold text-slate-200 tracking-wide">LÉA JOLY</p>
@@ -74,105 +75,17 @@
         <div id="sidebar-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/60 z-30 hidden lg:hidden"></div>
 
         <main class="flex-1 p-4 lg:p-8 overflow-x-hidden w-full">
-            <div class="max-w-7xl mx-auto space-y-6">
-                
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/40 pb-4">
-                    <div class="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-wider">
-                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> TABLEAU DE BORD
-                    </div>
-                    <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">
-                            VALEUR ACTIVE : <span class="text-blue-500 font-bold text-sm ml-1">25 000 €</span>
-                        </div>
-                        <button class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200 hover:bg-slate-100 transition">
-                            .PDF
-                        </button>
-                    </div>
+            <div id="content-area" class="max-w-7xl mx-auto space-y-6">
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">VALEUR PIPELINE</p>
-                        <p class="text-2xl font-bold text-white mt-1">25 000 €</p>
-                        <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">DOSSIERS QUALIFIÉS / PROPOSITION</p>
-                    </div>
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">CLIENTS GAGNÉS</p>
-                        <p class="text-2xl font-bold text-white mt-1">2</p>
-                        <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">CONTRATS SIGNÉS ACTIFS</p>
-                    </div>
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">OPPORTUNITÉS TOTALES</p>
-                        <p class="text-2xl font-bold text-white mt-1">3</p>
-                        <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">PROSPECTS EN BASE CRM</p>
-                    </div>
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TOTAL ENCAISSÉ</p>
-                        <p class="text-2xl font-bold text-white mt-1">5 000 €</p>
-                        <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">SÉCURISÉ VIA FACTURES PAYÉES</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl flex flex-col justify-between">
-                        <div>
-                            <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4">ACTIONS RÉCENTES</h3>
-                            <div class="space-y-3">
-                                <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex items-start gap-3">
-                                    <input type="checkbox" class="mt-0.5">
-                                    <div>
-                                        <p class="text-xs font-semibold text-white">Lancement de l'audit SEO technique</p>
-                                        <p class="text-[9px] text-slate-500 uppercase mt-0.5">STARLIGHT AGENCY • 2026-05-28</p>
-                                    </div>
-                                </div>
-                                <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex items-start gap-3">
-                                    <input type="checkbox" class="mt-0.5">
-                                    <div>
-                                        <p class="text-xs font-semibold text-white">Appel de suivi client pour devis</p>
-                                        <p class="text-[9px] text-slate-500 uppercase mt-0.5">GLOBALTECH LTD • 2026-05-29</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl flex flex-col justify-between">
-                        <div>
-                            <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4">ÉMISSIONS COMPTABLES</h3>
-                            <div class="space-y-3">
-                                <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex justify-between items-center">
-                                    <div>
-                                        <p class="text-xs font-bold text-white">ACME CORP</p>
-                                        <p class="text-[9px] text-slate-500 uppercase mt-0.5">INV-1024</p>
-                                    </div>
-                                    <span class="text-xs font-bold text-white">15 000 €</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl flex flex-col justify-between">
-                        <div>
-                            <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4">OPPORTUNITÉS PRIORITAIRES</h3>
-                            <div class="h-24 flex items-center justify-center border border-dashed border-slate-800 rounded-lg">
-                                <p class="text-xs text-slate-500">Aucun prospect chaud à afficher</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
         </main>
     </div>
 
     <script>
-        // La fonction unique et corrigée pour ouvrir/fermer la sidebar
         function toggleMenu() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebar-overlay').classList.toggle('hidden');
         }
 
-        // Changement de compte
         function toggleProfile() {
             let nameElem = document.getElementById('prof-name');
             let roleElem = document.getElementById('prof-role');
@@ -184,6 +97,125 @@
                 roleElem.innerText = "CHEF DE PROJET SENIOR";
             }
         }
+
+        // Système de navigation réel (Injecte le contenu dans la page sans alertes)
+        function switchView(viewName) {
+            const content = document.getElementById('content-area');
+            
+            // Ferme le menu sur mobile après un clic
+            if(!document.getElementById('sidebar').classList.contains('-translate-x-full')) {
+                toggleMenu();
+            }
+
+            // Gestion visuelle des boutons actifs
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if(item.getAttribute('data-view') === viewName) {
+                    item.className = "nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-blue-500 bg-[#1e293b]/40 border-l-4 border-blue-500 active-menu";
+                } else {
+                    item.className = "nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200";
+                }
+            });
+
+            if(viewName === 'dashboard') {
+                content.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/40 pb-4">
+                        <div class="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> TABLEAU DE BORD
+                        </div>
+                        <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
+                            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                                VALEUR ACTIVE : <span class="text-blue-500 font-bold text-sm ml-1">25 000 €</span>
+                            </div>
+                            <button class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200">
+                                .PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">VALEUR PIPELINE</p>
+                            <p class="text-2xl font-bold text-white mt-1">25 000 €</p>
+                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">DOSSIERS QUALIFIÉS / PROPOSITION</p>
+                        </div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">CLIENTS GAGNÉS</p>
+                            <p class="text-2xl font-bold text-white mt-1">2</p>
+                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">CONTRATS SIGNÉS ACTIFS</p>
+                        </div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">OPPORTUNITÉS TOTALES</p>
+                            <p class="text-2xl font-bold text-white mt-1">3</p>
+                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">PROSPECTS EN BASE CRM</p>
+                        </div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TOTAL ENCAISSÉ</p>
+                            <p class="text-2xl font-bold text-white mt-1">5 000 €</p>
+                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">SÉCURISÉ VIA FACTURES PAYÉES</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl lg:col-span-2 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4">ACTIONS RÉCENTES</h3>
+                                <div class="space-y-3">
+                                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex items-start gap-3">
+                                        <input type="checkbox" class="mt-0.5">
+                                        <div>
+                                            <p class="text-xs font-semibold text-white">Lancement de l'audit SEO technique</p>
+                                            <p class="text-[9px] text-slate-500 uppercase mt-0.5">STARLIGHT AGENCY • 2026-05-28</p>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex items-start gap-3">
+                                        <input type="checkbox" class="mt-0.5">
+                                        <div>
+                                            <p class="text-xs font-semibold text-white">Appel de suivi client pour devis</p>
+                                            <p class="text-[9px] text-slate-500 uppercase mt-0.5">GLOBALTECH LTD • 2026-05-29</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="switchView('planning')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4 hover:bg-slate-800/20 transition">VOIR TOUT MON PLANNING</button>
+                        </div>
+
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4">ÉMISSIONS COMPTABLES</h3>
+                                <div class="space-y-3">
+                                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex justify-between items-center">
+                                        <div>
+                                            <p class="text-xs font-bold text-white">ACME CORP</p>
+                                            <p class="text-[9px] text-slate-500 uppercase mt-0.5">INV-1024</p>
+                                        </div>
+                                        <span class="text-xs font-bold text-white">15 000 €</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="switchView('facturation')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4 hover:bg-slate-800/20 transition">FACTURATION GÉNÉRALE</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Vue propre et intégrée pour chaque onglet cliqué
+                content.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
+                        <div class="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> ${viewName.toUpperCase()}
+                        </div>
+                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 hover:text-white bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg transition">
+                            ⬅ RETOUR ACCUEIL
+                        </button>
+                    </div>
+                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-6 rounded-xl">
+                        <p class="text-xs text-slate-400 tracking-wide">Base de données de la section <span class="text-white font-semibold">${viewName.toUpperCase()}</span> connectée avec succès.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Lancement au démarrage
+        switchView('dashboard');
     </script>
 </body>
 </html>
