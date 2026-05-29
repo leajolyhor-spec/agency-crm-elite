@@ -22,6 +22,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-[#070a13] text-slate-100 antialiased min-h-screen">
 
@@ -30,9 +31,7 @@
             <span class="font-bold text-sm text-white tracking-wide">ELITECRM CABINET</span>
             <span class="text-[9px] text-slate-500 uppercase tracking-widest">Production Agence</span>
         </div>
-        <button onclick="toggleMenu()" class="p-2 text-slate-400 hover:text-white font-bold text-2xl focus:outline-none">
-            ☰
-        </button>
+        <button onclick="toggleMenu()" class="p-2 text-slate-400 hover:text-white font-bold text-2xl focus:outline-none">☰</button>
     </div>
 
     <div class="flex min-h-screen relative">
@@ -43,24 +42,12 @@
             </div>
             
             <nav class="flex-1 py-4 space-y-1 overflow-y-auto no-scrollbar">
-                <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="dashboard">
-                    📊 TABLEAU DE BORD
-                </button>
-                <button onclick="switchView('opportunites')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="opportunites">
-                    👥 OPPORTUNITÉS
-                </button>
-                <button onclick="switchView('portefeuille')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="portefeuille">
-                    💼 PORTEFEUILLE
-                </button>
-                <button onclick="switchView('facturation')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="facturation">
-                    💳 FACTURATION
-                </button>
-                <button onclick="switchView('planning')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="planning">
-                    📅 PLANNING
-                </button>
-                <button onclick="switchView('statistiques')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="statistiques">
-                    📈 STATISTIQUES
-                </button>
+                <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="dashboard">📊 TABLEAU DE BORD</button>
+                <button onclick="switchView('opportunites')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="opportunites">👥 OPPORTUNITÉS</button>
+                <button onclick="switchView('portefeuille')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="portefeuille">💼 PORTEFEUILLE</button>
+                <button onclick="switchView('facturation')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="facturation">💳 FACTURATION</button>
+                <button onclick="switchView('planning')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="planning">📅 PLANNING</button>
+                <button onclick="switchView('statistiques')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="statistiques">📈 STATISTIQUES</button>
             </nav>
 
             <div class="p-4 border-t border-slate-800/40 bg-[#090d16]">
@@ -82,6 +69,27 @@
     </div>
 
     <script>
+        // --- BASE DE DONNÉES LOCALSTORAGE (Garde les infos même après actualisation) ---
+        let appsData = JSON.parse(localStorage.getItem('elite_crm_data')) || {
+            leads: [
+                { id: 1, name: "ACME CORP", budget: "15 000 €", status: "Proposition" },
+                { id: 2, name: "STARLIGHT AGENCY", budget: "5 000 €", status: "Gagné" },
+                { id: 3, name: "GLOBALTECH LTD", budget: "8 500 €", status: "Prospect" }
+            ],
+            invoices: [
+                { id: 1024, client: "ACME CORP", amount: "15 000 €", status: "ATTENTE" },
+                { id: 1023, client: "STARLIGHT AGENCY", amount: "5 000 €", status: "PAYÉ" }
+            ],
+            tasks: [
+                { id: 1, text: "Lancement de l'audit SEO technique", client: "STARLIGHT AGENCY", date: "2026-05-28", done: false },
+                { id: 2, text: "Appel de suivi client pour devis", client: "GLOBALTECH LTD", date: "2026-05-29", done: false }
+            ]
+        };
+
+        function syncData() {
+            localStorage.setItem('elite_crm_data', JSON.stringify(appsData));
+        }
+
         function toggleMenu() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebar-overlay').classList.toggle('hidden');
@@ -99,12 +107,21 @@
             }
         }
 
+        function toggleTask(id) {
+            let task = appsData.tasks.find(t => t.id === id);
+            if(task) {
+                task.done = !task.done;
+                syncData();
+                // Si on est sur le dashboard ou planning, on rafraîchit la vue courante
+                let activeNav = document.querySelector('.active-menu');
+                if(activeNav) switchView(activeNav.getAttribute('data-view'));
+            }
+        }
+
+        // --- SYSTÈME D'ONGLETS INTERACTIFS ET CONTENUS RÉELS ---
         function switchView(viewName) {
             const content = document.getElementById('content-area');
-            
-            if(!document.getElementById('sidebar').classList.contains('-translate-x-full')) {
-                toggleMenu();
-            }
+            if(!document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleMenu();
 
             document.querySelectorAll('.nav-item').forEach(item => {
                 if(item.getAttribute('data-view') === viewName) {
@@ -115,6 +132,36 @@
             });
 
             if(viewName === 'dashboard') {
+                // Calculs des cartes dynamiques
+                let pipeTotal = appsData.leads.reduce((acc, curr) => acc + parseInt(curr.budget.replace(/[^0-9]/g, '') || 0), 0);
+                let gagneCount = appsData.leads.filter(l => l.status === 'Gagné').length;
+                let totalEncaisse = appsData.invoices.filter(i => i.status === 'PAYÉ').reduce((acc, curr) => acc + parseInt(curr.amount.replace(/[^0-9]/g, '') || 0), 0);
+
+                // Génération des lignes de tâches modifiables
+                let tasksHTML = appsData.tasks.map(t => `
+                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex items-start gap-3">
+                        <input type="checkbox" onchange="toggleTask(${t.id})" ${t.done ? 'checked' : ''} class="mt-0.5 rounded bg-slate-800 border-slate-700">
+                        <div>
+                            <p class="text-xs font-semibold ${t.done ? 'line-through text-slate-500' : 'text-white'}">${t.text}</p>
+                            <p class="text-[9px] text-slate-500 uppercase mt-0.5">${t.client} • ${t.date}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Génération des factures
+                let invoicesHTML = appsData.invoices.map(i => `
+                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-white">${i.client}</p>
+                            <p class="text-[9px] text-slate-500 uppercase mt-0.5">INV-${i.id}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-white">${i.amount}</p>
+                            <span class="text-[8px] font-bold ${i.status === 'PAYÉ' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'} px-1.5 py-0.5 rounded border block mt-1">${i.status}</span>
+                        </div>
+                    </div>
+                `).join('');
+
                 content.innerHTML = `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/40 pb-4">
                         <div class="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-wider">
@@ -122,150 +169,217 @@
                         </div>
                         <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
                             <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">
-                                VALEUR ACTIVE : <span class="text-blue-500 font-bold text-sm ml-1">25 000 €</span>
+                                VALEUR ACTIVE : <span class="text-blue-500 font-bold text-sm ml-1">${pipeTotal.toLocaleString()} €</span>
                             </div>
-                            <button class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200">.PDF</button>
+                            <button onclick="downloadPDFReport()" class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200 hover:bg-slate-100 transition">
+                                .PDF
+                            </button>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">VALEUR PIPELINE</p>
-                            <p class="text-2xl font-bold text-white mt-1">25 000 €</p>
-                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">DOSSIERS QUALIFIÉS / PROPOSITION</p>
-                        </div>
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">CLIENTS GAGNÉS</p>
-                            <p class="text-2xl font-bold text-white mt-1">2</p>
-                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">CONTRATS SIGNÉS ACTIFS</p>
-                        </div>
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">OPPORTUNITÉS TOTALES</p>
-                            <p class="text-2xl font-bold text-white mt-1">3</p>
-                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">PROSPECTS EN BASE CRM</p>
-                        </div>
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TOTAL ENCAISSÉ</p>
-                            <p class="text-2xl font-bold text-white mt-1">5 000 €</p>
-                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-1">SÉCURISÉ VIA FACTURES PAYÉES</p>
-                        </div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">VALEUR PIPELINE</p><p class="text-2xl font-bold text-white mt-1">${pipeTotal.toLocaleString()} €</p><p class="text-[9px] text-slate-500 uppercase font-medium mt-1">DOSSIERS QUALIFIÉS</p></div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">CLIENTS GAGNÉS</p><p class="text-2xl font-bold text-white mt-1">${gagneCount}</p><p class="text-[9px] text-slate-500 uppercase font-medium mt-1">CONTRATS SIGNÉS ACTIFS</p></div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">OPPORTUNITÉS TOTALES</p><p class="text-2xl font-bold text-white mt-1">${appsData.leads.length}</p><p class="text-[9px] text-slate-500 uppercase font-medium mt-1">PROSPECTS EN BASE CRM</p></div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TOTAL ENCAISSÉ</p><p class="text-2xl font-bold text-white mt-1">${totalEncaisse.toLocaleString()} €</p><p class="text-[9px] text-slate-500 uppercase font-medium mt-1">FACTURES PAYÉES SÉCURISÉES</p></div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl lg:col-span-2 flex flex-col justify-between">
-                            <div>
-                                <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4">ACTIONS RÉCENTES</h3>
-                                <div class="space-y-3">
-                                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex items-start gap-3">
-                                        <input type="checkbox" class="mt-0.5">
-                                        <div>
-                                            <p class="text-xs font-semibold text-white">Lancement de l'audit SEO technique</p>
-                                            <p class="text-[9px] text-slate-500 uppercase mt-0.5">STARLIGHT AGENCY • 2026-05-28</p>
-                                        </div>
-                                    </div>
-                                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex items-start gap-3">
-                                        <input type="checkbox" class="mt-0.5">
-                                        <div>
-                                            <p class="text-xs font-semibold text-white">Appel de suivi client pour devis</p>
-                                            <p class="text-[9px] text-slate-500 uppercase mt-0.5">GLOBALTECH LTD • 2026-05-29</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onclick="switchView('planning')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4">VOIR TOUT MON PLANNING</button>
+                            <div><h3 class="text-xs font-bold text-slate-300 uppercase mb-4">🗓 ACTIONS RÉCENTES (A COCHER)</h3><div class="space-y-3">${tasksHTML}</div></div>
+                            <button onclick="switchView('planning')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4">GÉRER MON PLANNING</button>
                         </div>
-
                         <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl flex flex-col justify-between">
-                            <div>
-                                <h3 class="text-xs font-bold tracking-wider text-slate-300 uppercase mb-4">ÉMISSIONS COMPTABLES</h3>
-                                <div class="space-y-3">
-                                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex justify-between items-center">
-                                        <div>
-                                            <p class="text-xs font-bold text-white">ACME CORP</p>
-                                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-0.5">INV-1024</p>
-                                        </div>
-                                        <span class="text-xs font-bold text-white">15 000 €</span>
-                                    </div>
-                                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex justify-between items-center">
-                                        <div>
-                                            <p class="text-xs font-bold text-white">STARLIGHT AGENCY</p>
-                                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-0.5">INV-1023</p>
-                                        </div>
-                                        <span class="text-xs font-bold text-white">5 000 €</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onclick="switchView('facturation')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4">FACTURATION GÉNÉRALE</button>
+                            <div><h3 class="text-xs font-bold text-slate-300 uppercase mb-4">💰 ÉMISSIONS COMPTABLES</h3><div class="space-y-3">${invoicesHTML}</div></div>
+                            <button onclick="switchView('facturation')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4">OUVRIR LA FACTURATION</button>
                         </div>
                     </div>
                 `;
             } else if(viewName === 'opportunites') {
+                let rows = appsData.leads.map((l, index) => `
+                    <tr class="hover:bg-slate-800/20">
+                        <td class="p-4 font-semibold text-white">${l.name}</td>
+                        <td class="p-4">${l.budget}</td>
+                        <td class="p-4">
+                            <select onchange="updateLeadStatus(${index}, this.value)" class="bg-[#070a13] text-xs text-slate-300 border border-slate-700 rounded px-2 py-1">
+                                <option value="Prospect" ${l.status==='Prospect'?'selected':''}>Prospect</option>
+                                <option value="Proposition" ${l.status==='Proposition'?'selected':''}>Proposition</option>
+                                <option value="Gagné" ${l.status==='Gagné'?'selected':''}>Gagné</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">👥 VUE OPPORTUNITÉS</div>
-                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">👥 GESTION DES OPPORTUNITÉS</div>
+                        <button onclick="addLeadPrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ AJOUTER UN PROSPECT</button>
                     </div>
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 rounded-xl overflow-hidden overflow-x-auto no-scrollbar">
+                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 rounded-xl overflow-hidden shadow-xl">
                         <table class="w-full text-left border-collapse text-xs">
-                            <thead class="bg-[#070a13] text-slate-400 uppercase font-bold tracking-wider border-b border-slate-800">
-                                <tr>
-                                    <th class="p-4">Entreprise</th><th class="p-4">Budget</th><th class="p-4">Statut</th>
-                                </tr>
+                            <thead class="bg-[#070a13] text-slate-400 uppercase font-bold border-b border-slate-800">
+                                <tr><th class="p-4">Entreprise</th><th class="p-4">Budget Estimé</th><th class="p-4">Phase de Vente</th></tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-800/50">
-                                <tr class="hover:bg-slate-800/20"><td class="p-4 font-semibold text-white">ACME CORP</td><td class="p-4">15 000 €</td><td class="p-4 text-amber-400">Proposition</td></tr>
-                                <tr class="hover:bg-slate-800/20"><td class="p-4 font-semibold text-white">STARLIGHT AGENCY</td><td class="p-4">5 000 €</td><td class="p-4 text-emerald-400">Gagné</td></tr>
-                                <tr class="hover:bg-slate-800/20"><td class="p-4 font-semibold text-white">GLOBALTECH LTD</td><td class="p-4">8 500 €</td><td class="p-4 text-blue-400">En cours</td></tr>
-                            </tbody>
+                            <tbody class="divide-y divide-slate-800/50">${rows}</tbody>
                         </table>
                     </div>
                 `;
             } else if(viewName === 'portefeuille') {
+                let col1 = appsData.leads.filter(l => l.status === 'Prospect').map(l => `<div class="p-3 bg-[#070a13] rounded-lg border border-slate-800 mb-2 font-semibold text-xs">${l.name} (${l.budget})</div>`).join('');
+                let col2 = appsData.leads.filter(l => l.status === 'Proposition').map(l => `<div class="p-3 bg-[#070a13] rounded-lg border border-blue-900/50 mb-2 font-semibold text-xs text-blue-400">${l.name} (${l.budget})</div>`).join('');
+                let col3 = appsData.leads.filter(l => l.status === 'Gagné').map(l => `<div class="p-3 bg-[#070a13] rounded-lg border border-emerald-900/50 mb-2 font-semibold text-xs text-emerald-400">${l.name} (${l.budget})</div>`).join('');
+
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💼 PORTEFEUILLE CLIENTS</div>
-                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💼 PIPELINE DU PORTEFEUILLE (KANBAN DYNAMIQUE)</div>
+                        <button onclick="switchView('opportunites')" class="text-[10px] font-bold bg-[#0b0f19] border border-slate-800 px-3 py-1.5 rounded-lg">MODIFIER DEPUIS LES OPPORTUNITÉS</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-2">PROSPECTS</p><div class="p-3 bg-[#070a13] rounded-lg border border-slate-800 text-xs font-semibold">GlobalTech Ltd</div></div>
-                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-2">PROPOSITIONS</p><div class="p-3 bg-[#070a13] rounded-lg border border-slate-800 text-xs font-semibold">Acme Corp</div></div>
-                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-2">CONTRATS ACTIFS</p><div class="p-3 bg-[#070a13] rounded-lg border border-slate-800 text-xs font-semibold text-emerald-400">Starlight Agency</div></div>
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-3 tracking-wider">📥 PROSPECTS ENTRANTS</p>${col1 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-blue-400 font-bold uppercase mb-3 tracking-wider">📝 OFFRES TRANSMISES</p>${col2 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-emerald-400 font-bold uppercase mb-3 tracking-wider">✅ CONTRATS SIGNÉS</p>${col3 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
                     </div>
                 `;
             } else if(viewName === 'facturation') {
+                let rows = appsData.invoices.map((i, idx) => `
+                    <div class="p-4 bg-[#0b0f19] border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                        <div>
+                            <p class="font-bold text-white">${i.client} - INV-${i.id}</p>
+                            <p class="text-slate-500 mt-1">Montant global : <span class="text-white font-medium">${i.amount}</span></p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <select onchange="updateInvoiceStatus(${idx}, this.value)" class="bg-[#070a13] text-slate-300 text-[11px] border border-slate-700 rounded p-1">
+                                <option value="ATTENTE" ${i.status==='ATTENTE'?'selected':''}>ATTENTE</option>
+                                <option value="PAYÉ" ${i.status==='PAYÉ'?'selected':''}>PAYÉ</option>
+                            </select>
+                            <button onclick="downloadSingleInvoice(${i.id}, '${i.client}', '${i.amount}', '${i.status}')" class="bg-slate-800 border border-slate-700 text-slate-200 px-2.5 py-1 rounded text-[11px] font-bold hover:bg-slate-700">TÉLÉCHARGER</button>
+                        </div>
+                    </div>
+                `).join('');
+
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💳 COMPTABILITÉ & FACTURES</div>
-                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💳 ENREGISTREMENT ET ÉMISSION DE FACTURES</div>
+                        <button onclick="addInvoicePrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ AJOUTER UNE FACTURE</button>
                     </div>
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl space-y-2 text-xs">
-                        <div class="flex justify-between border-b border-slate-800/50 pb-2 text-slate-400 font-bold"><span>FACTURE</span><span>MONTANT</span><span>STATUT</span></div>
-                        <div class="flex justify-between py-1"><span>INV-1024 (Acme Corp)</span><span class="font-bold">15 000 €</span><span class="text-amber-500">En attente</span></div>
-                        <div class="flex justify-between py-1"><span>INV-1023 (Starlight)</span><span class="font-bold">5 000 €</span><span class="text-emerald-500">Payée</span></div>
-                    </div>
+                    <div class="space-y-3">${rows}</div>
                 `;
             } else if(viewName === 'planning') {
+                let list = appsData.tasks.map(t => `
+                    <div class="p-4 bg-[#0b0f19] border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" onchange="toggleTask(${t.id})" ${t.done ? 'checked' : ''} class="rounded bg-slate-800 border-slate-700">
+                            <div>
+                                <p class="font-semibold ${t.done ? 'line-through text-slate-500' : 'text-white'}">${t.text}</p>
+                                <p class="text-slate-500 text-[10px] mt-0.5">${t.client}</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-400 bg-[#070a13] border border-slate-800 px-2 py-0.5 rounded">${t.date}</span>
+                    </div>
+                `).join('');
+
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📅 AGENDA DE L'AGENCE</div>
-                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📅 AGENDA DU CABINET (MODIFIABLE)</div>
+                        <button onclick="addTaskPrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ PLANIFIER UNE ACTION</button>
                     </div>
-                    <div class="space-y-3">
-                        <div class="p-4 bg-[#0b0f19] border border-slate-800 rounded-xl flex justify-between text-xs"><p class="font-semibold text-white">Lancement de l'audit SEO technique</p><p class="text-blue-400">Hier</p></div>
-                        <div class="p-4 bg-[#0b0f19] border border-slate-800 rounded-xl flex justify-between text-xs"><p class="font-semibold text-white">Appel de suivi client pour devis</p><p class="text-blue-400">Aujourd'hui</p></div>
-                    </div>
+                    <div class="space-y-3">${list}</div>
                 `;
             } else if(viewName === 'statistiques') {
+                // Création d'un histogramme 100% css natif
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📈 STATISTIQUES REVENUS</div>
-                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📈 DIAGRAMME DE CONVERSION DE L'AGENCE</div>
                     </div>
-                    <div class="bg-[#0b0f19] border border-slate-800 p-6 rounded-xl text-center text-xs text-slate-400">
-                        Graphique des ventes : Objectif de conversion fixé à <span class="text-white font-bold">74%</span> atteint ce mois-ci.
+                    <div class="bg-[#0b0f19] border border-slate-800 p-6 rounded-xl shadow-xl">
+                        <p class="text-xs text-slate-400 mb-6 font-medium">Répartition des budgets (en EUR) par affaire enregistrée dans le CRM :</p>
+                        
+                        <div class="flex items-end justify-around h-48 border-b border-l border-slate-800 px-4 pt-4">
+                            <div class="w-12 bg-blue-600/80 rounded-t-lg relative group transition-all hover:bg-blue-500" style="height: 75%;">
+                                <span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] font-bold text-white">15k €</span>
+                            </div>
+                            <div class="w-12 bg-emerald-600/80 rounded-t-lg relative group transition-all hover:bg-emerald-500" style="height: 35%;">
+                                <span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] font-bold text-white">5k €</span>
+                            </div>
+                            <div class="w-12 bg-indigo-600/80 rounded-t-lg relative group transition-all hover:bg-indigo-500" style="height: 50%;">
+                                <span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] font-bold text-white">8.5k €</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-around text-[10px] text-slate-500 font-bold mt-3 tracking-wide">
+                            <div class="w-12 text-center truncate">ACME CORP</div>
+                            <div class="w-12 text-center truncate">STARLIGHT</div>
+                            <div class="w-12 text-center truncate">GLOBALTECH</div>
+                        </div>
                     </div>
                 `;
             }
+        }
+
+        // --- ENREGISTREMENT DE DONNÉES (PROMPTS) ---
+        function addLeadPrompt() {
+            let name = prompt("Nom de l'entreprise :");
+            let budget = prompt("Budget estimé (ex: 12 000 €) :");
+            if(name && budget) {
+                appsData.leads.push({ id: Date.now(), name: name.toUpperCase(), budget, status: "Prospect" });
+                syncData(); switchView('opportunites');
+            }
+        }
+
+        function updateLeadStatus(index, status) {
+            appsData.leads[index].status = status;
+            syncData();
+        }
+
+        function addInvoicePrompt() {
+            let client = prompt("Nom du client à facturer :");
+            let amount = prompt("Montant (ex: 4 200 €) :");
+            if(client && amount) {
+                appsData.invoices.push({ id: Math.floor(1000 + Math.random() * 9000), client: client.toUpperCase(), amount, status: "ATTENTE" });
+                syncData(); switchView('facturation');
+            }
+        }
+
+        function updateInvoiceStatus(index, status) {
+            appsData.invoices[index].status = status;
+            syncData();
+        }
+
+        function addTaskPrompt() {
+            let text = prompt("Intitulé du rendez-vous / de la tâche :");
+            let client = prompt("Client concerné :");
+            if(text && client) {
+                appsData.tasks.push({ id: Date.now(), text, client: client.toUpperCase(), date: "2026-05-29", done: false });
+                syncData(); switchView('planning');
+            }
+        }
+
+        // --- GÉNÉRATEUR DE PDF REELS (MOTEUR JSPDF) ---
+        function downloadPDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont("Helvetica", "bold"); doc.text("ELITECRM CABINET - AGENT REVENUE REPORT", 14, 20);
+            doc.setFont("Helvetica", "normal"); doc.setFontSize(10);
+            doc.text("Généré via le terminal EliteCRM mobile le : " + new Date().toLocaleDateString(), 14, 28);
+            doc.text("-----------------------------------------------------------------------------------------", 14, 34);
+            
+            let y = 45;
+            appsData.leads.forEach(l => {
+                doc.text(`- Affaire: ${l.name} | Volume budget: ${l.budget} | Phase: ${l.status}`, 14, y);
+                y += 10;
+            });
+            doc.save("rapport-general-crm.pdf");
+        }
+
+        function downloadSingleInvoice(id, client, amount, status) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont("Helvetica", "bold"); doc.text(`FACTURE COMMERCIALE N°${id}`, 14, 20);
+            doc.setFont("Helvetica", "normal"); doc.setFontSize(11);
+            doc.text(`Client destinataire : ${client}`, 14, 35);
+            doc.text(`Montant total de la prestation : ${amount}`, 14, 45);
+            doc.text(`Règlement enregistré sous le statut : ${status}`, 14, 55);
+            doc.save(`facture-inv-${id}.pdf`);
         }
 
         switchView('dashboard');
