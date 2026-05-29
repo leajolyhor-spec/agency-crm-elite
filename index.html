@@ -104,7 +104,7 @@
     </div>
 
     <script>
-        // --- DATA OBJECT INITIALIZATION FIRST ---
+        // --- DATA OBJECT INITIALIZATION ---
         let appsData = JSON.parse(localStorage.getItem('elite_crm_v3_store')) || {
             currentUser: { name: "LÉA JOLY", role: "CHEF DE PROJET SENIOR" },
             isLoggedOut: false,
@@ -127,7 +127,18 @@
             localStorage.setItem('elite_crm_v3_store', JSON.stringify(appsData));
         }
 
-        // --- INTERACTIVE NAVIGATION AND UTILITIES DEFINITIONS ---
+        // --- AUTHENTIFICATION ET SESSIONS ---
+        function initSession() {
+            if(appsData.isLoggedOut) {
+                document.getElementById('login-screen').style.display = 'flex';
+            } else {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('prof-name').innerText = appsData.currentUser.name;
+                document.getElementById('prof-role').innerText = appsData.currentUser.role;
+                switchView('dashboard'); // CHARGE DIRECTEMENT L'ACCUEIL AU DEMARRAGE
+            }
+        }
+
         function toggleMenu() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebar-overlay').classList.toggle('hidden');
@@ -221,7 +232,7 @@
             }
         }
 
-        // --- VIEW CONTROLLER ---
+        // --- CONTROLEUR DE VUE ---
         function switchView(viewName) {
             const content = document.getElementById('content-area');
             if(!document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleMenu();
@@ -379,7 +390,6 @@
                     <div class="space-y-3">${list}</div>
                 `;
             } else if(viewName === 'statistiques') {
-                // --- GRAPHIQUE ULTRA PREMIUM CONNECTÉ ---
                 let maxBudget = 25000;
                 let barsHTML = appsData.leads.map(l => {
                     let numericalValue = parseInt(l.budget.replace(/[^0-9]/g, '') || 0);
@@ -459,9 +469,12 @@
             doc.save(`facture-${id}.pdf`);
         }
 
-        // --- SESSION EXECUTION ---
+        // --- EXÉCUTION INITIALE FORCEE ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initSession();
+        });
+        // Sécurité si DOMContentLoaded est déjà passé
         initSession();
-        switchView('dashboard');
     </script>
 </body>
 </html>
