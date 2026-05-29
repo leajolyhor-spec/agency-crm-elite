@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EliteCRM - Production Cabinet</title>
+    <!-- Tailwind CSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            950: '#0b0f19',
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                            600: '#475569',
+                            500: '#64748b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+
+        .ambient-glow-blue {
+            filter: blur(80px);
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+        }
+        .ambient-glow-purple {
+            filter: blur(80px);
+            background: radial-gradient(circle, rgba(147, 51, 234, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+        }
+    </style>
+    <!-- React and ReactDOM UMD -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel standalone for runtime JSX evaluation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- jsPDF UMD -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen relative overflow-x-hidden antialiased">
+    <!-- Ambient backgrounds -->
+    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] ambient-glow-blue pointer-events-none z-0"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] ambient-glow-purple pointer-events-none z-0"></div>
+
+    <div id="root" class="relative z-10 min-h-screen flex flex-col"></div>
+
+    <!-- Application Script (compiled via Babel client-side) -->
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Profiles ---
+        const AGENT_PROFILES = [
+            { id: '1', name: 'Marc-Antoine Dudon', role: 'Directeur de l\'Agence', avatarSeed: 'Marc', email: 'ma.dudon@elite.io' },
+            { id: '2', name: 'Léa Joly', role: 'Chef de Projet Senior', avatarSeed: 'Lea', email: 'leajoly.hor@gmail.com' },
+            { id: '3', name: 'Thibaut Mercier', role: 'Tech Lead Front-End', avatarSeed: 'Thibaut', email: 't.mercier@elite.io' },
+        ];
+
+        // --- Custom vector icons lookup to ensure high-performance loading without external network calls ---
+        function Icon({ name, size = 16, className = "" }) {
+            const icons = {
+                LayoutDashboard: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <rect x="3" y="3" width="7" height="9" />
+                        <rect x="14" y="3" width="7" height="5" />
+                        <rect x="14" y="12" width="7" height="9" />
+                        <rect x="3" y="16" width="7" height="5" />
+                    </svg>
+                ),
+                UserPlus: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <line x1="19" y1="8" x2="19" y2="14" />
+                        <line x1="22" y1="11" x2="16" y2="11" />
+                    </svg>
+                ),
+                Users: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                ),
+                DollarSign: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                ),
+                Calendar: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                ),
+                TrendingUp: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                        <polyline points="17 6 23 6 23 12" />
+                    </svg>
+                ),
+                Clock: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                ),
+                Download: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                ),
+                X: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                ),
+                Plus: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                ),
+                Search: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                ),
+                Sliders: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <line x1="4" y1="21" x2="4" y2="14" />
+                        <line x1="4" y1="10" x2="4" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12" y2="3" />
+                        <line x1="20" y1="21" x2="20" y2="16" />
+                        <line x1="20" y1="12" x2="20" y2="3" />
+                        <line x1="2" y1="14" x2="6" y2="14" />
+                        <line x1="10" y1="8" x2="14" y2="8" />
+                        <line x1="18" y1="16" x2="22" y2="16" />
+                    </svg>
+                ),
+                CheckSquare: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <polyline points="9 11 12 14 22 4" />
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                    </svg>
+                ),
+                Briefcase: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                    </svg>
+                ),
+                CheckCircle2: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                ),
+                Activity: (
+                    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                )
+            };
+            return icons[name] || <span className="text-xs">?</span>;
+        }
+
+        // --- Standard date helpers ---
+        function formatSimpleDate(timestampOrString) {
+            try {
+                const date = new Date(timestampOrString);
+                return date.toISOString().split('T')[0];
+            } catch (err) {
+                return String(timestampOrString);
+            }
+        }
+
+        function App() {
+            const [view, setView] = useState('dashboard');
+            const [leads, setLeads] = useState(() => {
+                const saved = localStorage.getItem('standalone_leads');
+                if (saved) return JSON.parse(saved);
+                return [
+                    {
+                        id: 's-1',
+                        companyName: 'Acme Corp',
+                        contactName: 'Thomas Martin',
+                        email: 't.martin@acme.com',
+                        need: 'Refonte globale du site web grand public et plateforme E-Commerce sous Next.js',
+                        budget: 15000,
+                        temperature: 'Chaud',
+                        status: 'Won',
+                        serviceType: 'Web',
+                        createdAt: Date.now() - 86400000 * 15,
+                        documents: [{ id: 'doc-1', name: 'Charte Graphique.pdf', type: 'PDF', date: '2026-05-10' }],
+                        projectStatus: 'Développement',
+                        projectProgress: 45,
+                        deliveryDate: '2026-07-20',
+                        clientNotes: [
+                            { id: 'cn-1', text: 'Réunion de cadrage validée. Maquettes Figma approuvées.', date: '2026-05-18 10:30', author: 'Léa Joly' },
+                            { id: 'cn-2', text: 'Configuration initiale de TypeScript, Tailwind v4 et routes de l\'application.', date: '2026-05-22 15:45', author: 'Thibaut Mercier' }
+                        ]
+                    },
+                    {
+                        id: 's-2',
+                        companyName: 'Starlight Agency',
+                        contactName: 'Marie Curie',
+                        email: 'm.curie@starlight.io',
+                        need: 'Audit de mots-clés SEO complet & Campagnes Google Ads optimisées',
+                        budget: 5000,
+                        temperature: 'Tiède',
+                        status: 'Won',
+                        serviceType: 'SEO',
+                        createdAt: Date.now() - 86400000 * 8,
+                        documents: [],
+                        projectStatus: 'Cadrage',
+                        projectProgress: 15,
+                        deliveryDate: '2026-06-15',
+                        clientNotes: [
+                            { id: 'cn-3', text: 'Analyses concurrentielles SEO terminées. Identification des opportunités clés.', date: '2026-05-24 11:15', author: 'Léa Joly' }
+                        ]
+                    },
+                    {
+                        id: 's-3',
+                        companyName: 'GlobalTech Ltd',
+                        contactName: 'Alan Turing',
+                        email: 'a.turing@globaltech.com',
+                        need: 'Audit infrastructure sécurité pour conformité RGPD & Migration Cloud AWS',
+                        budget: 25000,
+                        temperature: 'Froid',
+                        status: 'Qualified',
+                        serviceType: 'Consulting',
+                        createdAt: Date.now() - 86400000 * 20,
+                        documents: [],
+                        projectStatus: 'Cadrage',
+                        projectProgress: 0,
+                        deliveryDate: '2026-08-30',
+                        clientNotes: []
+                    }
+                ];
+            });
+
+            const [invoices, setInvoices] = useState(() => {
+                const saved = localStorage.getItem('standalone_invoices');
+                if (saved) return JSON.parse(saved);
+                return [
+                    {
+                        id: 'INV-1024',
+                        leadId: 's-1',
+                        companyName: 'Acme Corp',
+                        amount: 15000,
+                        status: 'Pending',
+                        dueDate: '2026-06-15',
+                        createdAt: Date.now() - 86400000 * 5,
+                    },
+                    {
+                        id: 'INV-1023',
+                        leadId: 's-2',
+                        companyName: 'Starlight Agency',
+                        amount: 5000,
+                        status: 'Paid',
+                        dueDate: '2026-05-30',
+                        createdAt: Date.now() - 86400000 * 8,
+                    }
+                ];
+            });
+
+            const [actions, setActions] = useState(() => {
+                const saved = localStorage.getItem('standalone_actions');
+                if (saved) return JSON.parse(saved);
+                return [
+                    { id: 'act-1', leadId: 's-1', companyName: 'Acme Corp', text: 'Rédiger l\'avant-projet technique', completed: true, date: '2026-05-20' },
+                    { id: 'act-2', leadId: 's-1', companyName: 'Acme Corp', text: 'Validation maquette accueil', completed: true, date: '2026-05-22' },
+                    { id: 'act-3', leadId: 's-2', companyName: 'Starlight Agency', text: 'Lancement de l\'audit SEO technique', completed: false, date: '2026-05-28' },
+                    { id: 'act-4', leadId: 's-3', companyName: 'GlobalTech Ltd', text: 'Appel de suivi client pour devis', completed: false, date: '2026-05-29' }
+                ];
+            });
+
+            const [currentProfile, setCurrentProfile] = useState(() => {
+                const saved = localStorage.getItem('standalone_profile');
+                return saved ? JSON.parse(saved) : AGENT_PROFILES[1]; // default Léa Joly
+            });
+
+            const [selectedLead, setSelectedLead] = useState(null);
+            const [isProfileSwitcherOpen, setIsProfileSwitcherOpen] = useState(false);
+            const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+            const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const [searchQuery, setSearchQuery] = useState('');
+
+            // Forms values
+            const [newLeadCompany, setNewLeadCompany] = useState('');
+            const [newLeadContact, setNewLeadContact] = useState('');
+            const [newLeadEmail, setNewLeadEmail] = useState('');
+            const [newLeadNeed, setNewLeadNeed] = useState('');
+            const [newLeadBudget, setNewLeadBudget] = useState('');
+            const [newLeadTemp, setNewLeadTemp] = useState('Chaud');
+            const [newLeadService, setNewLeadService] = useState('Web');
+
+            const [newActionText, setNewActionText] = useState('');
+            const [newActionLead, setNewActionLead] = useState('');
+            const [newActionDate, setNewActionDate] = useState('');
+
+            // Watch & Save
+            useEffect(() => {
+                localStorage.setItem('standalone_leads', JSON.stringify(leads));
+            }, [leads]);
+
+            useEffect(() => {
+                localStorage.setItem('standalone_invoices', JSON.stringify(invoices));
+            }, [invoices]);
+
+            useEffect(() => {
+                localStorage.setItem('standalone_actions', JSON.stringify(actions));
+            }, [actions]);
+
+            useEffect(() => {
+                localStorage.setItem('standalone_profile', JSON.stringify(currentProfile));
+            }, [currentProfile]);
+
+            // Stats derivation
+            const stats = useMemo(() => {
+                const wonLeads = leads.filter(l => l.status === 'Won');
+                const pipelineVal = leads.filter(l => l.status !== 'Won').reduce((sum, l) => sum + Number(l.budget || 0), 0);
+                
+                return {
+                    totalLeads: leads.length,
+                    clients: wonLeads.length,
+                    pipelineValue: pipelineVal,
+                    totalInvoiced: invoices.reduce((sum, i) => sum + i.amount, 0),
+                    totalPaid: invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + i.amount, 0)
+                };
+            }, [leads, invoices]);
+
+            // --- PDF generation triggers ---
+            const handleDownloadInvoicePDF = (inv) => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    // Header Banner
+                    doc.setFillColor(15, 23, 42); // slate-900
+                    doc.rect(0, 0, 210, 40, 'F');
+                    
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont("Helvetica", "bold");
+                    doc.setFontSize(22);
+                    doc.text("AGENCY ELITE", 15, 25);
+                    
+                    doc.setFont("Helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.text("FACTURE ELECPDF CLIENT", 125, 25);
+                    
+                    // Addresses
+                    doc.setTextColor(51, 65, 85);
+                    doc.setFontSize(10);
+                    doc.setFont("Helvetica", "bold");
+                    doc.text("Émetteur :", 15, 55);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text("Agency Elite SAS", 15, 61);
+                    doc.text("8 Rue de la Paix, 75002 Paris", 15, 67);
+                    doc.text("contact@agencyelite.io", 15, 73);
+                    
+                    doc.setFont("Helvetica", "bold");
+                    doc.text("Destinataire :", 115, 55);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text(inv.companyName, 115, 61);
+                    doc.text("Client Actif Certifié", 115, 67);
+                    
+                    // Terms
+                    doc.setFont("Helvetica", "bold");
+                    doc.text("Détails Réglement :", 15, 90);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text(`Pièce N° : ${inv.id}`, 15, 96);
+                    doc.text(`Création : ${formatSimpleDate(inv.createdAt)}`, 15, 102);
+                    doc.text(`Échéance : ${inv.dueDate}`, 15, 108);
+                    
+                    // Service line
+                    doc.setFillColor(241, 245, 249);
+                    doc.rect(15, 120, 180, 10, 'F');
+                    doc.setFont("Helvetica", "bold");
+                    doc.text("Description prestation", 20, 126);
+                    doc.text("Montant TTC", 160, 126);
+                    
+                    doc.setFont("Helvetica", "normal");
+                    doc.text(`Prestation technique digitale pour ${inv.companyName}`, 20, 138);
+                    doc.text(`${inv.amount.toLocaleString()} EUR`, 160, 138);
+                    
+                    doc.setDrawColor(226, 232, 240);
+                    doc.line(15, 145, 195, 145);
+                    
+                    // Total breakdown
+                    doc.setFont("Helvetica", "bold");
+                    doc.text("Montant HT :", 120, 160);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text(`${(inv.amount * 0.833).toFixed(2)} EUR`, 160, 160);
+                    
+                    doc.setFont("Helvetica", "bold");
+                    doc.text("TVA (20%) :", 120, 166);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text(`${(inv.amount * 0.167).toFixed(2)} EUR`, 160, 166);
+                    
+                    doc.setFont("Helvetica", "bold");
+                    doc.setFontSize(12);
+                    doc.text("Total Facturé TTC :", 120, 175);
+                    doc.text(`${inv.amount.toLocaleString()} EUR`, 160, 175);
+                    
+                    // Badge stamp representation
+                    doc.setFontSize(22);
+                    doc.setFont("Helvetica", "bold");
+                    if (inv.status === 'Paid') {
+                        doc.setTextColor(16, 185, 129);
+                        doc.rect(15, 195, 50, 18);
+                        doc.text("PAYÉE", 28, 207);
+                    } else if (inv.status === 'Overdue') {
+                        doc.setTextColor(239, 68, 68);
+                        doc.rect(15, 195, 52, 18);
+                        doc.text("RETARD", 23, 207);
+                    } else {
+                        doc.setTextColor(245, 158, 11);
+                        doc.rect(15, 195, 52, 18);
+                        doc.text("ATTENTE", 21, 207);
+                    }
+                    
+                    // Footers
+                    doc.setTextColor(148, 163, 184);
+                    doc.setFontSize(8);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text("EliteCRM - Cabinet Digital Francophone - SIRET 991 234 567 89012 - Paris", 15, 280);
+                    doc.text("Merci de collaborer avec Elite !", 85, 285);
+                    
+                    doc.save(`Facture_${inv.id}.pdf`);
+                } catch (err) {
+                    console.error("Failed to make Invoice PDF", err);
+                }
+            };
+
+            const handleDownloadGlobalReportPDF = () => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    // Core Header
+                    doc.setFillColor(15, 23, 42); // slate-900
+                    doc.rect(0, 0, 210, 45, 'F');
+                    
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont("Helvetica", "bold");
+                    doc.setFontSize(22);
+                    doc.text("ELITECRM - RAPPORT D'ACTIVITÉ", 15, 22);
+                    
+                    doc.setFont("Helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.text(`Rapport hebdomadaire - Genere le ${formatSimpleDate(new Date())}`, 15, 32);
+                    doc.text("BILAN DES DOSSIERS ET OPERATIONS", 115, 32);
+                    
+                    // Section 1: Figures
+                    doc.setTextColor(15, 23, 42);
+                    doc.setFontSize(13);
+                    doc.setFont("Helvetica", "bold");
+                    doc.text("1. METRIQUES FINANCIERES & COMMERCIALES", 15, 60);
+                    
+                    doc.setFontSize(10);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text(`* Total Opportunités qualifiees : ${stats.totalLeads} dossiers`, 20, 70);
+                    doc.text(`* Clients Actifs en Portefeuille : ${stats.clients} comptes`, 20, 76);
+                    doc.text(`* Total Volume Pipeline : ${stats.pipelineValue.toLocaleString()} EUR`, 20, 82);
+                    
+                    doc.text(`* Factures cumulées generees : ${stats.totalInvoiced.toLocaleString()} EUR`, 110, 70);
+                    doc.text(`* Chiffre d'Affaires Encaissé : ${stats.totalPaid.toLocaleString()} EUR`, 110, 76);
+                    doc.text(`* Reste à recouvrer client : ${(stats.totalInvoiced - stats.totalPaid).toLocaleString()} EUR`, 110, 82);
+                    
+                    doc.setDrawColor(226, 232, 240);
+                    doc.line(15, 90, 195, 90);
+                    
+                    // Section 2: Distribution
+                    doc.setFont("Helvetica", "bold");
+                    doc.setFontSize(13);
+                    doc.text("2. VENTILATION PAR POLE TECHNIQUE", 15, 105);
+                    
+                    const sCounts = { Web: 0, SEO: 0, Design: 0, Consulting: 0 };
+                    leads.forEach(l => { sCounts[l.serviceType] = (sCounts[l.serviceType] || 0) + 1; });
+                    doc.setFontSize(10);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text(`Prestations Réparties : Web: ${sCounts.Web} | SEO: ${sCounts.SEO} | Design: ${sCounts.Design} | Consulting: ${sCounts.Consulting}`, 20, 115);
+                    
+                    const tCounts = { Chaud: 0, Tiède: 0, Froid: 0 };
+                    leads.forEach(l => { tCounts[l.temperature] = (tCounts[l.temperature] || 0) + 1; });
+                    doc.text(`Statuts d'opportunites : Chauds: ${tCounts.Chaud} | Tièdes: ${tCounts.Tiède} | Froids: ${tCounts.Froid}`, 20, 122);
+                    
+                    doc.line(15, 132, 195, 132);
+                    
+                    // Section 3: Portefeuille
+                    doc.setFont("Helvetica", "bold");
+                    doc.setFontSize(13);
+                    doc.text("3. ETAT DU PORTEFEUILLE CLIENT (Contrats Gagnés)", 15, 147);
+                    
+                    doc.setFillColor(241, 245, 249);
+                    doc.rect(15, 154, 180, 8, 'F');
+                    doc.setFontSize(9);
+                    doc.text("Entreprise", 18, 160);
+                    doc.text("Objectif technique", 65, 160);
+                    doc.text("Budget Signature", 135, 160);
+                    doc.text("Phase Active", 170, 160);
+                    
+                    let currY = 168;
+                    const activeWon = leads.filter(l => l.status === 'Won');
+                    if (activeWon.length > 0) {
+                        doc.setFont("Helvetica", "normal");
+                        activeWon.forEach(client => {
+                            if (currY < 265) {
+                                doc.text(client.companyName, 18, currY);
+                                doc.text(client.need.substring(0, 32) + (client.need.length > 32 ? '...' : ''), 65, currY);
+                                doc.text(`${client.budget.toLocaleString()} EUR`, 135, currY);
+                                doc.text(client.projectStatus || 'Cadrage', 170, currY);
+                                currY += 9;
+                            }
+                        });
+                    } else {
+                        doc.setFont("Helvetica", "italic");
+                        doc.text("Aucun client actif dans le portefeuille.", 20, 168);
+                    }
+                    
+                    // Footer
+                    doc.line(15, 245, 195, 245);
+                    doc.setTextColor(30, 41, 59);
+                    doc.setFont("Helvetica", "bold");
+                    doc.setFontSize(10);
+                    doc.text("Rapport EliteCRM Généré sous signature cryptographique d'agence", 15, 255);
+                    
+                    doc.setTextColor(148, 163, 184);
+                    doc.setFontSize(8);
+                    doc.setFont("Helvetica", "normal");
+                    doc.text("Bilan d'agence destiné à la gouvernance et au pilotage.", 15, 280);
+                    
+                    doc.save("Bilan_Mensuel_CRM.pdf");
+                } catch (err) {
+                    console.error("Failed to generate report global PDF", err);
+                }
+            };
+
+            // --- Handlers lead submission ---
+            const handleAddLeadSubmit = (e) => {
+                e.preventDefault();
+                if (!newLeadCompany.trim() || !newLeadNeed.trim()) return;
+
+                const newLd = {
+                    id: 's-' + Math.floor(Math.random() * 100000),
+                    companyName: newLeadCompany,
+                    contactName: newLeadContact || 'Contact principal',
+                    email: newLeadEmail || 'email@agence.io',
+                    need: newLeadNeed,
+                    budget: Number(newLeadBudget) || 1000,
+                    temperature: newLeadTemp,
+                    status: 'New',
+                    serviceType: newLeadService,
+                    createdAt: Date.now(),
+                    documents: [],
+                    projectStatus: 'Cadrage',
+                    projectProgress: 0,
+                    deliveryDate: formatSimpleDate(new Date(Date.now() + 86400000 * 30)),
+                    clientNotes: []
+                };
+
+                setLeads([newLd, ...leads]);
+                setIsLeadModalOpen(false);
+
+                // Reset
+                setNewLeadCompany('');
+                setNewLeadContact('');
+                setNewLeadEmail('');
+                setNewLeadNeed('');
+                setNewLeadBudget('');
+                setNewLeadTemp('Chaud');
+                setNewLeadService('Web');
+            };
+
+            const handleMoveLeadStatus = (leadId, newStatus) => {
+                setLeads(leads.map(l => {
+                    if (l.id === leadId) {
+                        const updated = { ...l, status: newStatus };
+                        // Create invoice on Won
+                        if (newStatus === 'Won' && !invoices.some(i => i.leadId === leadId)) {
+                            const newInvoice = {
+                                id: 'INV-' + Math.floor(1000 + Math.random() * 9000),
+                                leadId: l.id,
+                                companyName: l.companyName,
+                                amount: l.budget,
+                                status: 'Pending',
+                                dueDate: formatSimpleDate(new Date(Date.now() + 86400000 * 30)),
+                                createdAt: Date.now()
+                            };
+                            setInvoices(prev => [newInvoice, ...prev]);
+                        }
+                        return updated;
+                    }
+                    return l;
+                }));
+            };
+
+            const handleDeleteLead = (id) => {
+                setLeads(leads.filter(l => l.id !== id));
+                if (selectedLead && selectedLead.id === id) {
+                    setSelectedLead(null);
+                }
+            };
+
+            const handleUpdateProjectInfo = (leadId, fields) => {
+                setLeads(prevLeads => prevLeads.map(l => {
+                    if (l.id === leadId) {
+                        const updated = { ...l, ...fields };
+                        if (selectedLead && selectedLead.id === leadId) {
+                            setSelectedLead(updated);
+                        }
+                        return updated;
+                    }
+                    return l;
+                }));
+            };
+
+            const handleAddClientNote = (leadId, text) => {
+                if (!text.trim()) return;
+                setLeads(prevLeads => prevLeads.map(l => {
+                    if (l.id === leadId) {
+                        const newNote = {
+                            id: 'cn-' + Math.floor(Math.random() * 100000),
+                            text: text,
+                            date: formatSimpleDate(new Date()) + ' ' + new Date().toTimeString().split(' ')[0].substring(0, 5),
+                            author: currentProfile.name
+                        };
+                        const updated = {
+                            ...l,
+                            clientNotes: [newNote, ...(l.clientNotes || [])]
+                        };
+                        if (selectedLead && selectedLead.id === leadId) {
+                            setSelectedLead(updated);
+                        }
+                        return updated;
+                    }
+                    return l;
+                }));
+            };
+
+            const handleDeleteClientNote = (leadId, noteId) => {
+                setLeads(prevLeads => prevLeads.map(l => {
+                    if (l.id === leadId) {
+                        const updated = {
+                            ...l,
+                            clientNotes: (l.clientNotes || []).filter(note => note.id !== noteId)
+                        };
+                        if (selectedLead && selectedLead.id === leadId) {
+                            setSelectedLead(updated);
+                        }
+                        return updated;
+                    }
+                    return l;
+                }));
+            };
+
+            // --- Handlers Planning / Tasks ---
+            const handleAddActionSubmit = (e) => {
+                e.preventDefault();
+                if (!newActionText.trim()) return;
+
+                const clientObj = leads.find(l => l.id === newActionLead);
+                const newAct = {
+                    id: 'act-' + Math.floor(Math.random() * 100000),
+                    leadId: newActionLead || '',
+                    companyName: clientObj ? clientObj.companyName : 'Général',
+                    text: newActionText,
+                    completed: false,
+                    date: newActionDate || formatSimpleDate(new Date())
+                };
+
+                setActions([newAct, ...actions]);
+                setIsActionModalOpen(false);
+                setNewActionText('');
+                setNewActionLead('');
+                setNewActionDate('');
+            };
+
+            const handleToggleAction = (id) => {
+                setActions(actions.map(a => a.id === id ? { ...a, completed: !a.completed } : a));
+            };
+
+            const handleDeleteAction = (id) => {
+                setActions(actions.filter(a => a.id !== id));
+            };
+
+            // --- Localization and naming sync ---
+            const viewTitles = {
+                dashboard: 'Tableau de bord',
+                leads: 'Opportunités',
+                clients: 'Portefeuille',
+                invoices: 'Facturation',
+                actions: 'Planning',
+                statistics: 'Statistiques'
+            };
+
+            // --- Views components ---
+
+            // 1. Dashboard Block
+            const DashboardView = () => {
+                const pendingActions = actions.filter(a => !a.completed).slice(0, 3);
+                const recentInvoices = invoices.slice(0, 3);
+                const hotLeads = leads.filter(l => l.status !== 'Won' && l.temperature === 'Chaud').slice(0, 3);
+
+                return (
+                    <div className="space-y-6">
+                        {/* Highlights Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg relative overflow-hidden group hover:border-blue-500/50 transition-all duration-300">
+                                <span className="absolute top-2 right-2 text-blue-500/5 group-hover:text-blue-500/10 transition-all"><Icon name="TrendingUp" size={48} /></span>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Valeur Pipeline</p>
+                                <p className="text-xl font-bold font-mono text-slate-100 mt-2">{stats.pipelineValue.toLocaleString()} €</p>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-1">Dossiers Qualifiés / Proposition</p>
+                            </div>
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-300">
+                                <span className="absolute top-2 right-2 text-emerald-500/5 group-hover:text-emerald-500/10 transition-all"><Icon name="Users" size={48} /></span>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Clients Gagnés</p>
+                                <p className="text-xl font-bold font-mono text-emerald-400 mt-2">{stats.clients}</p>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-1">Contrats Signés Actifs</p>
+                            </div>
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg relative overflow-hidden group hover:border-indigo-500/50 transition-all duration-300">
+                                <span className="absolute top-2 right-2 text-indigo-500/5 group-hover:text-indigo-500/10 transition-all"><Icon name="UserPlus" size={48} /></span>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Opportunités totales</p>
+                                <p className="text-xl font-bold font-mono text-indigo-400 mt-2">{stats.totalLeads}</p>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-1">Prospects en base CRM</p>
+                            </div>
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg relative overflow-hidden group hover:border-purple-500/50 transition-all duration-300">
+                                <span className="absolute top-2 right-2 text-purple-500/5 group-hover:text-purple-500/10 transition-all"><Icon name="DollarSign" size={48} /></span>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Total Encaissé</p>
+                                <p className="text-xl font-bold font-mono text-purple-400 mt-2">{stats.totalPaid.toLocaleString()} €</p>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-1">Sécurisé via factures payées</p>
+                            </div>
+                        </div>
+
+                        {/* Mid Row Widgets split */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Actions block */}
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-300 border-b border-slate-800 pb-3 mb-4 flex items-center gap-1.5">
+                                        <Icon name="Calendar" size={13} className="text-blue-500" />
+                                        Actions Récents
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {pendingActions.map(act => (
+                                            <div key={act.id} className="p-3 bg-slate-950 border border-slate-800 rounded flex items-start gap-2.5">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={act.completed}
+                                                    onChange={() => handleToggleAction(act.id)}
+                                                    className="mt-1 accent-blue-600 rounded cursor-pointer"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs text-slate-300 font-medium leading-none">{act.text}</p>
+                                                    <div className="flex gap-2 items-center mt-1.5">
+                                                        <span className="text-[8px] bg-blue-500/10 text-blue-400 px-1 font-bold rounded uppercase">{act.companyName}</span>
+                                                        <span className="text-[8px] text-slate-500 font-mono font-black">{act.date}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button onClick={() => setView('actions')} className="w-full mt-4 py-2 border border-slate-800 hover:border-blue-500 hover:text-blue-400 rounded text-[9px] font-bold uppercase tracking-widest text-slate-400 transition-all">
+                                    Voir tout mon planning
+                                </button>
+                            </div>
+
+                            {/* Invoices block */}
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-300 border-b border-slate-800 pb-3 mb-4 flex items-center gap-1.5">
+                                        <Icon name="DollarSign" size={13} className="text-emerald-500" />
+                                        Émissions Comptables
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {recentInvoices.map(inv => (
+                                            <div key={inv.id} className="p-3 bg-slate-950 border border-slate-800 rounded flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-200 uppercase tracking-tight">{inv.companyName}</p>
+                                                    <p className="text-[8px] text-slate-500 font-mono mt-0.5">{inv.id} • Échéance : {inv.dueDate}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs font-mono font-bold text-slate-200">{inv.amount.toLocaleString()} €</p>
+                                                    <span className={`inline-block text-[8px] font-bold uppercase border px-1.5 py-0.2 rounded mt-1.5 ${
+                                                        inv.status === 'Paid' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                                                    }`}>
+                                                        {inv.status === 'Paid' ? 'Payé' : 'Attente'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button onClick={() => setView('invoices')} className="w-full mt-4 py-2 border border-slate-800 hover:border-blue-500 hover:text-blue-400 rounded text-[9px] font-bold uppercase tracking-widest text-slate-400 transition-all">
+                                    Facturation générale
+                                </button>
+                            </div>
+
+                            {/* Hot prospects block */}
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-300 border-b border-slate-800 pb-3 mb-4 flex items-center gap-1.5">
+                                        <Icon name="Activity" size={13} className="text-red-500" />
+                                        Opportunités prioritaires (Chauds)
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {hotLeads.map(ld => (
+                                            <div key={ld.id} className="p-3 bg-slate-950 border border-slate-800 rounded space-y-1.5">
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-xs font-black text-slate-200 uppercase tracking-tight">{ld.companyName}</p>
+                                                    <span className="bg-red-500/20 text-red-400 border border-red-500/30 font-bold uppercase text-[8px] px-1 rounded">CHAUD</span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 leading-tight block italic">{ld.need}</p>
+                                                <div className="flex justify-between items-center pt-1 border-t border-slate-800/50">
+                                                    <span className="text-[9px] font-mono text-slate-500">Budget prévu :</span>
+                                                    <span className="text-xs font-mono font-bold text-blue-400">{ld.budget.toLocaleString()} €</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button onClick={() => setView('leads')} className="w-full mt-4 py-2 border border-slate-800 hover:border-blue-500 hover:text-blue-400 rounded text-[9px] font-bold uppercase tracking-widest text-slate-400 transition-all">
+                                    Analyser les opportunités
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // 2. Opportunités View (Leads)
+            const LeadsView = () => {
+                const [leadTextFilter, setLeadTextFilter] = useState('');
+                const [selectedTemperature, setSelectedTemperature] = useState('ALL');
+
+                const currentLeadsFiltered = useMemo(() => {
+                    let items = leads;
+                    if (leadTextFilter.trim()) {
+                        items = items.filter(l => 
+                            l.companyName.toLowerCase().includes(leadTextFilter.toLowerCase()) ||
+                            l.contactName.toLowerCase().includes(leadTextFilter.toLowerCase())
+                        );
+                    }
+                    if (selectedTemperature !== 'ALL') {
+                        items = items.filter(l => l.temperature === selectedTemperature);
+                    }
+                    return items;
+                }, [leads, leadTextFilter, selectedTemperature]);
+
+                const columns = [
+                    { id: 'New', title: 'Nouveau', bg: 'bg-slate-900/40 border-slate-800/80', dotColor: 'bg-blue-500' },
+                    { id: 'Qualified', title: 'Qualifié', bg: 'bg-slate-900/40 border-slate-800/80', dotColor: 'bg-yellow-500' },
+                    { id: 'Proposal', title: 'Proposition', bg: 'bg-slate-900/40 border-slate-800/80', dotColor: 'bg-purple-500' },
+                    { id: 'Won', title: ' Gagné (Actif)', bg: 'bg-slate-900/40 border-slate-800/80', dotColor: 'bg-emerald-500' },
+                ];
+
+                return (
+                    <div className="space-y-6">
+                        {/* Upper controls bar */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-900 border border-slate-800 rounded-lg p-4">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="relative">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Filtrer par marque..."
+                                        value={leadTextFilter}
+                                        onChange={(e) => setLeadTextFilter(e.target.value)}
+                                        className="h-8 bg-slate-950 border border-slate-800 rounded px-3 text-xs text-slate-300 w-48 font-bold"
+                                    />
+                                </div>
+                                <select 
+                                    value={selectedTemperature}
+                                    onChange={(e) => setSelectedTemperature(e.target.value)}
+                                    className="h-8 bg-slate-950 border border-slate-800 rounded px-2 text-xs text-slate-300 font-bold uppercase"
+                                >
+                                    <option value="ALL">Toutes Températures</option>
+                                    <option value="Chaud">Chaud</option>
+                                    <option value="Tiède">Tiède</option>
+                                    <option value="Froid">Froid</option>
+                                </select>
+                            </div>
+                            <button 
+                                onClick={() => setIsLeadModalOpen(true)}
+                                className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 transition-all w-full sm:w-auto justify-center"
+                            >
+                                <Icon name="Plus" size={13} /> Injecter une Opportunité
+                            </button>
+                        </div>
+
+                        {/* Kanban Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+                            {columns.map(col => {
+                                const colItems = currentLeadsFiltered.filter(l => l.status === col.id);
+                                return (
+                                    <div key={col.id} className={`${col.bg} border rounded-lg p-4 min-h-[350px] flex flex-col`}>
+                                        <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${col.dotColor}`} />
+                                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">{col.title}</h3>
+                                            </div>
+                                            <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-950 px-1.5 py-0.2 rounded border border-slate-800">
+                                                {colItems.length}
+                                            </span>
+                                        </div>
+                                        <div className="flex-1 space-y-3">
+                                            {colItems.map(item => {
+                                                const badgeTempColors = {
+                                                    Chaud: 'bg-red-500/10 text-red-400 border-red-500/20',
+                                                    Tiède: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+                                                    Froid: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                };
+                                                return (
+                                                    <div key={item.id} className="bg-slate-950 border border-slate-800/80 p-3.5 rounded-lg space-y-2 relative group hover:border-slate-700 transition-all">
+                                                        <div className="flex justify-between items-start">
+                                                            <p className="text-xs font-black text-slate-100 uppercase tracking-tight truncate max-w-[130px]">{item.companyName}</p>
+                                                            <button 
+                                                                onClick={() => handleDeleteLead(item.id)} 
+                                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-slate-500 hover:text-red-500"
+                                                                title="Supprimer"
+                                                            >
+                                                                <Icon name="X" size={10} />
+                                                            </button>
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-400 leading-normal block line-clamp-2 italic">{item.need}</p>
+                                                        
+                                                        {/* Details bottom parameters */}
+                                                        <div className="flex justify-between items-center pt-2 border-t border-slate-900">
+                                                            <span className={`text-[8px] font-bold uppercase border px-1.5 py-0.2 rounded ${badgeTempColors[item.temperature]}`}>
+                                                                {item.temperature}
+                                                            </span>
+                                                            <span className="text-[10px] font-mono font-bold text-blue-400">{item.budget.toLocaleString()} €</span>
+                                                        </div>
+
+                                                        {/* Status modification utility */}
+                                                        <div className="pt-2 flex justify-between gap-1">
+                                                            {col.id !== 'New' && (
+                                                                <button 
+                                                                    onClick={() => handleMoveLeadStatus(item.id, col.id === 'Qualified' ? 'New' : col.id === 'Proposal' ? 'Qualified' : 'Proposal')}
+                                                                    className="flex-1 bg-slate-900 border border-slate-800 text-[8px] font-bold text-slate-500 py-1 rounded hover:text-white"
+                                                                >
+                                                                    ◀ Reculer
+                                                                </button>
+                                                            )}
+                                                            {col.id !== 'Won' && (
+                                                                <button 
+                                                                    onClick={() => handleMoveLeadStatus(item.id, col.id === 'New' ? 'Qualified' : col.id === 'Qualified' ? 'Proposal' : 'Won')}
+                                                                    className="flex-1 bg-slate-900 border border-slate-800 text-[8px] font-bold text-slate-400 py-1 rounded hover:text-blue-400 hover:border-blue-500/30 font-black"
+                                                                >
+                                                                    Avancer ▶
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            };
+
+            // 3. Portefeuille Clients View (Wons Client track)
+            const ClientsView = () => {
+                const activeClients = useMemo(() => leads.filter(l => l.status === 'Won'), [leads]);
+                const [noteInput, setNoteInput] = useState('');
+
+                return (
+                    <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-180px)] lg:overflow-hidden">
+                        {/* Directory Panel */}
+                        <div className={`w-full lg:w-80 bg-slate-900 border border-slate-800/80 rounded-lg flex flex-col h-[350px] lg:h-full overflow-hidden shrink-0 ${selectedLead ? 'hidden lg:flex' : 'flex'}`}>
+                            <div className="p-4 border-b border-slate-800 bg-slate-950/40">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-300">Répertoire des comptes ({activeClients.length})</h3>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-1">Cabinet - Contrats actifs</p>
+                            </div>
+                            <div className="flex-1 overflow-y-auto divide-y divide-slate-800 bg-slate-950/20">
+                                {activeClients.map(client => {
+                                    const isSel = selectedLead?.id === client.id;
+                                    const statesStyles = {
+                                        Cadrage: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+                                        Développement: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                                        Tests: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                                        Livré: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                                        Maintenance: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                    };
+                                    return (
+                                        <button 
+                                            key={client.id}
+                                            onClick={() => setSelectedLead(client)}
+                                            className={`w-full text-left p-4 hover:bg-slate-900/40 transition-all flex flex-col gap-2 border-l-4 ${
+                                                isSel ? 'bg-slate-900 border-blue-500' : 'border-transparent'
+                                            }`}
+                                        >
+                                            <div className="flex justify-between items-start w-full">
+                                                <p className="text-xs font-bold text-slate-200 uppercase truncate max-w-[130px]">{client.companyName}</p>
+                                                <span className={`px-1.5 py-0.2 rounded text-[8px] border font-black uppercase ${statesStyles[client.projectStatus] || 'bg-slate-800 text-slate-400'}`}>
+                                                    {client.projectStatus || 'Cadrage'}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 italic leading-snug truncate w-full">{client.need}</p>
+                                            <div className="w-full flex items-center justify-between mt-1">
+                                                <div className="w-2/3 bg-slate-800 rounded-full h-1">
+                                                    <div className="bg-blue-600 h-1 rounded-full" style={{ width: `${client.projectProgress || 0}%` }} />
+                                                </div>
+                                                <span className="text-[9px] font-mono font-bold text-slate-400">{client.projectProgress || 0}%</span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Interactive Tracking details sheet */}
+                        <div className={`flex-1 bg-slate-900 border border-slate-800/80 rounded-lg flex flex-col min-h-[400px] lg:h-full overflow-hidden ${!selectedLead ? 'hidden lg:flex' : 'flex'}`}>
+                            {selectedLead && selectedLead.status === 'Won' ? (
+                                <div className="flex flex-col h-full divide-y divide-slate-800 overflow-hidden">
+                                    {/* Panel key Details header */}
+                                    <div className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-950/40 shrink-0">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-blue-600/25 border border-blue-500/30 text-blue-400 font-black flex items-center justify-center text-lg">
+                                                {selectedLead.companyName[0]}
+                                            </div>
+                                            <div>
+                                                {/* Back button on mobile */}
+                                                <button 
+                                                    onClick={() => setSelectedLead(null)}
+                                                    className="lg:hidden flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white rounded text-[10px] font-black uppercase tracking-wider mb-2.5"
+                                                >
+                                                    ◀ Retour au répertoire
+                                                </button>
+                                                <h3 className="text-sm font-black text-slate-100 uppercase tracking-widest">{selectedLead.companyName}</h3>
+                                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide mt-0.5">{selectedLead.contactName} • {selectedLead.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-left md:text-right shrink-0">
+                                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Budget Signature</p>
+                                            <p className="text-sm font-bold font-mono text-blue-400 mt-0.5">{selectedLead.budget.toLocaleString()} €</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Panel Core Tracking options content split */}
+                                    <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-800 min-h-0">
+                                        {/* Left control block for Project management */}
+                                        <div className="p-5 space-y-5 overflow-y-auto max-h-full">
+                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 border-b border-slate-800 pb-2">
+                                                <Icon name="Sliders" size={12} className="text-blue-500" />
+                                                Suivi du Contrat & Phases
+                                            </h4>
+                                            
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="text-[9px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Phase du Projet Actif</label>
+                                                    <select 
+                                                        value={selectedLead.projectStatus || 'Cadrage'}
+                                                        onChange={(e) => handleUpdateProjectInfo(selectedLead.id, { projectStatus: e.target.value })}
+                                                        className="h-8 bg-slate-950 border border-slate-800 text-slate-300 text-xs px-2.5 rounded w-full font-bold uppercase outline-none"
+                                                    >
+                                                        <option value="Cadrage">Cadrage & Spécifications</option>
+                                                        <option value="Développement">Développement & Phase Active</option>
+                                                        <option value="Tests">Recette & Assurance Qualité</option>
+                                                        <option value="Livré">Livré / Clôturé</option>
+                                                        <option value="Maintenance">Maintenance & Hébergement</option>
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <label className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Avancement Technique</label>
+                                                        <span className="text-[9px] font-mono font-bold text-blue-400 bg-blue-500/10 px-1 rounded">{selectedLead.projectProgress || 0}%</span>
+                                                    </div>
+                                                    <input 
+                                                        type="range"
+                                                        min="0"
+                                                        max="100"
+                                                        value={selectedLead.projectProgress || 0}
+                                                        onChange={(e) => handleUpdateProjectInfo(selectedLead.id, { projectProgress: Number(e.target.value) })}
+                                                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-[9px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Date estimée de livraison</label>
+                                                    <input 
+                                                        type="date"
+                                                        value={selectedLead.deliveryDate || ''}
+                                                        onChange={(e) => handleUpdateProjectInfo(selectedLead.id, { deliveryDate: e.target.value })}
+                                                        className="h-8 bg-slate-950 border border-slate-800 text-slate-300 text-xs px-2.5 rounded w-full outline-none font-bold"
+                                                    />
+                                                </div>
+
+                                                <div className="p-4 bg-slate-950/40 border border-slate- * p-4 bg-slate-950/30 border border-slate-800/80 rounded rounded-lg space-y-1">
+                                                    <p className="text-[8px] text-slate-500 uppercase font-black tracking-widest leading-none">Cahier des charges initial</p>
+                                                    <p className="text-xs text-slate-400 font-medium leading-relaxed">{selectedLead.need}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right log tracking / communications block */}
+                                        <div className="p-5 flex flex-col h-full overflow-hidden justify-between min-h-0">
+                                            <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
+                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 border-b border-slate-800 pb-2 mb-3 shrink-0">
+                                                    <Icon name="Clock" size={12} className="text-blue-500" />
+                                                    Logs & Historique des Échanges ({selectedLead.clientNotes?.length || 0})
+                                                </h4>
+
+                                                <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-4 min-h-0">
+                                                    {(selectedLead.clientNotes || []).map(note => (
+                                                        <div key={note.id} className="p-3 bg-slate-950 border border-slate-850 rounded relative group">
+                                                            <button 
+                                                                onClick={() => handleDeleteClientNote(selectedLead.id, note.id)} 
+                                                                className="absolute top-2 right-2 p-0.5 text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                                <Icon name="X" size={10} />
+                                                            </button>
+                                                            <div className="flex justify-between text-[8px] font-black uppercase text-slate-500">
+                                                                <span>Par : {note.author}</span>
+                                                                <span>{note.date}</span>
+                                                            </div>
+                                                            <p className="text-xs font-bold text-slate-300 mt-1 whitespace-pre-wrap">{note.text}</p>
+                                                        </div>
+                                                    ))}
+                                                    {(!selectedLead.clientNotes || selectedLead.clientNotes.length === 0) && (
+                                                        <p className="text-[10px] text-slate-500 italic text-center py-6">Aucun échange consigné pour le moment.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Log insert input block */}
+                                            <div className="space-y-2 shrink-0 border-t border-slate-800 pt-3">
+                                                <textarea 
+                                                    value={noteInput}
+                                                    onChange={(e) => setNoteInput(e.target.value)}
+                                                    placeholder="Inscrire un compte-rendu d'appel, email, ou point projet..."
+                                                    className="w-full h-14 bg-slate-950 border border-slate-800 rounded text-slate-300 text-xs p-2.5 resize-none outline-none font-bold"
+                                                    rows="2"
+                                                />
+                                                <button 
+                                                    onClick={() => {
+                                                        handleAddClientNote(selectedLead.id, noteInput);
+                                                        setNoteInput('');
+                                                    }}
+                                                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 font-bold text-[9px] uppercase tracking-widest rounded"
+                                                >
+                                                    Enregistrer l'échange client
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-950/20">
+                                    <Icon name="Briefcase" size={32} className="text-slate-700 mb-2" />
+                                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Informations Compte</p>
+                                    <p className="text-[10px] text-slate-500 italic mt-0.5">Veuillez sélectionner un client dans le listing de gauche pour procéder au suivi d'agence.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            // 4. Facturation View
+            const InvoicesView = () => {
+                return (
+                    <div className="bg-slate-900 border border-slate-800/80 rounded-lg p-4 md:p-5">
+                        <div className="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-300">Registre et Émissions Comptables</h3>
+                            <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Chiffres de Facturation</span>
+                        </div>
+                        
+                        {/* Mobile card stack layout for narrow devices */}
+                        <div className="md:hidden space-y-4">
+                            {invoices.map(inv => (
+                                <div key={inv.id} className="p-4 bg-slate-950/65 border border-slate-800/80 rounded-lg space-y-3">
+                                    <div className="flex justify-between items-center border-b border-slate-850 pb-2">
+                                        <span className="font-mono font-bold text-blue-400 text-xs">{inv.id}</span>
+                                        <span className={`inline-block text-[8px] font-bold uppercase border px-2 py-0.5 rounded ${
+                                            inv.status === 'Paid' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                                        }`}>
+                                            {inv.status === 'Paid' ? 'Payé' : inv.status === 'Overdue' ? 'Retard' : 'Attente'}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none">Entreprise</p>
+                                        <p className="text-xs font-bold text-slate-200 uppercase">{inv.companyName}</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 py-1.5 border-t border-b border-slate-850/60">
+                                        <div>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none">Échéance</p>
+                                            <p className="text-[11px] font-mono font-bold text-slate-300 mt-0.5">{inv.dueDate}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none">Montant</p>
+                                            <p className="text-xs font-mono font-bold text-slate-200 mt-0.5">{inv.amount.toLocaleString()} €</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row gap-2 pt-1 justify-between items-stretch sm:items-center">
+                                        <button 
+                                            onClick={() => handleDownloadInvoicePDF(inv)}
+                                            className="px-3 py-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-white rounded uppercase font-bold text-[9px] tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                                        >
+                                            <Icon name="Download" size={11} /> PDF Document
+                                        </button>
+                                        <select 
+                                            value={inv.status}
+                                            onChange={(e) => setInvoices(invoices.map(i => i.id === inv.id ? { ...i, status: e.target.value } : i))}
+                                            className="bg-slate-900 border border-slate-805 text-[10px] font-black text-slate-400 uppercase py-1.5 px-3 rounded outline-none cursor-pointer"
+                                        >
+                                            <option value="Pending">Attente</option>
+                                            <option value="Paid">Payé</option>
+                                            <option value="Overdue">Retard</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop table layout */}
+                        <div className="hidden md:block overflow-x-auto w-full">
+                            <table className="w-full text-left font-sans">
+                                <thead>
+                                    <tr className="border-b border-slate-800 text-[9px] uppercase font-black text-slate-400">
+                                        <th className="px-4 py-3">ID Facture</th>
+                                        <th className="px-4 py-3">Entreprise</th>
+                                        <th className="px-4 py-3">Date d'échéance</th>
+                                        <th className="px-4 py-3 text-right">Montant</th>
+                                        <th className="px-4 py-3 text-right">Action / Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800 text-xs bg-slate-950/20">
+                                    {invoices.map(inv => (
+                                        <tr key={inv.id} className="hover:bg-slate-900/30 transition-all font-medium text-slate-300">
+                                            <td className="px-4 py-3 font-mono font-bold text-blue-400">{inv.id}</td>
+                                            <td className="px-4 py-3 font-bold uppercase">{inv.companyName}</td>
+                                            <td className="px-4 py-3 font-mono text-slate-400">{inv.dueDate}</td>
+                                            <td className="px-4 py-3 text-right font-mono font-bold text-slate-200">{inv.amount.toLocaleString()} €</td>
+                                            <td className="px-4 py-3 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => handleDownloadInvoicePDF(inv)}
+                                                        className="px-2 py-0.5 hover:bg-slate-800 border border-slate-800 rounded uppercase font-black text-[8px] tracking-widest flex items-center gap-1 text-slate-400 hover:text-blue-400 transition-colors"
+                                                    >
+                                                        <Icon name="Download" size={10} /> PDF
+                                                    </button>
+                                                    <select 
+                                                        value={inv.status}
+                                                        onChange={(e) => setInvoices(invoices.map(i => i.id === inv.id ? { ...i, status: e.target.value } : i))}
+                                                        className="bg-slate-950 border border-slate-800 text-[8px] font-semibold text-slate-400 uppercase py-0.5 px-1.5 rounded outline-none cursor-pointer"
+                                                    >
+                                                        <option value="Pending">Attente</option>
+                                                        <option value="Paid">Payé</option>
+                                                        <option value="Overdue">Retard</option>
+                                                    </select>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
+            };
+
+            // 5. Planning View
+            const ActionsView = () => {
+                return (
+                    <div className="bg-slate-900 border border-slate-800/80 rounded-lg p-5">
+                        <div className="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-300">Checklist & Tâches d'Agence</h3>
+                            <button 
+                                onClick={() => setIsActionModalOpen(true)}
+                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[9px] uppercase tracking-widest rounded"
+                            >
+                                + Ajouter une tâche
+                            </button>
+                        </div>
+                        <div className="divide-y divide-slate-800 space-y-3.5 pt-2">
+                            {actions.map(act => (
+                                <div key={act.id} className="flex justify-between items-center py-2">
+                                    <div className="flex items-start gap-3">
+                                        <input 
+                                            type="checkbox"
+                                            checked={act.completed}
+                                            onChange={() => handleToggleAction(act.id)}
+                                            className="mt-1 cursor-pointer accent-blue-600 h-4 w-4 rounded"
+                                        />
+                                        <div>
+                                            <p className={`text-sm font-semibold text-slate-200 leading-none ${act.completed ? 'line-through text-slate-500' : ''}`}>{act.text}</p>
+                                            <div className="flex gap-2 items-center mt-2">
+                                                <span className="text-[8px] bg-blue-500/10 text-blue-400 px-1 font-bold rounded uppercase">{act.companyName}</span>
+                                                <span className="text-[8px] text-slate-500 font-mono font-black">{act.date}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleDeleteAction(act.id)}
+                                        className="p-1 hover:bg-slate-800 rounded text-slate-500 hover:text-red-500"
+                                    >
+                                        <Icon name="X" size={13} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
+            // 6. Statistiques View
+            const StatisticsView = () => {
+                const sCounts = { Web: 0, SEO: 0, Design: 0, Consulting: 0 };
+                leads.forEach(l => { sCounts[l.serviceType] = (sCounts[l.serviceType] || 0) + 1; });
+                const totalS = sCounts.Web + sCounts.SEO + sCounts.Design + sCounts.Consulting || 1;
+
+                return (
+                    <div className="space-y-6">
+                        {/* Highlights Stats row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg">
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Ratio encaissement réel</p>
+                                <p className="text-2xl font-black font-mono mt-2 text-slate-100">
+                                    {((stats.totalPaid / (stats.totalInvoiced || 1)) * 100).toFixed(1)} %
+                                </p>
+                                <div className="mt-3 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-emerald-500 h-1.5" style={{ width: `${(stats.totalPaid / (stats.totalInvoiced || 1)) * 100}%` }} />
+                                </div>
+                                <p className="text-[8px] text-slate-500 uppercase mt-2">Représente les factures payées divisées par la facturation globale</p>
+                            </div>
+
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg">
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Valeur moyenne des billets signés</p>
+                                <p className="text-2xl font-black font-mono mt-2 text-blue-400">
+                                    {(leads.filter(l => l.status === 'Won').reduce((sum, l) => sum + Number(l.budget || 0), 0) / (stats.clients || 1)).toLocaleString()} €
+                                </p>
+                                <div className="mt-4 flex justify-between text-[8px] text-slate-500 uppercase">
+                                    <span>Total volume signé : {leads.filter(l => l.status === 'Won').reduce((sum, l) => sum + Number(l.budget || 0), 0).toLocaleString()} €</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg">
+                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Actions d'équipes complétées</p>
+                                <p className="text-2xl font-black font-mono mt-2 text-indigo-400">
+                                    {((actions.filter(a => a.completed).length / (actions.length || 1)) * 100).toFixed(0)} %
+                                </p>
+                                <p className="text-[8px] text-slate-500 uppercase mt-3">Taux de résolution du planning</p>
+                            </div>
+                        </div>
+
+                        {/* Breakdown block */}
+                        <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-lg">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-300 border-b border-slate-800 pb-3 mb-4">Ventilation par pôle technique</h3>
+                            <div className="space-y-4">
+                                {Object.entries(sCounts).map(([key, value]) => {
+                                    const perc = ((value / totalS) * 100).toFixed(0);
+                                    return (
+                                        <div key={key}>
+                                            <div className="flex justify-between items-center text-xs font-bold uppercase text-slate-400 mb-1">
+                                                <span>{key}</span>
+                                                <span className="font-mono">{perc}% ({value})</span>
+                                            </div>
+                                            <div className="relative w-full bg-slate-805 bg-slate-800 rounded-full h-2 overflow-hidden">
+                                                <div className="bg-blue-600 h-2" style={{ width: `${perc}%` }} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen flex text-slate-300 font-sans overflow-x-hidden">
+                    {/* Backdrop for mobile active sidebar */}
+                    {isMobileMenuOpen && (
+                        <div 
+                            className="fixed inset-0 bg-slate-950/70 backdrop-blur-[2px] z-40 md:hidden" 
+                            onClick={() => setIsMobileMenuOpen(false)} 
+                        />
+                    )}
+
+                    {/* Left Rails navigation */}
+                    <div 
+                        id="sidebar" 
+                        className={`fixed inset-y-0 left-0 w-64 bg-slate-950 border-r border-slate-850 flex flex-col justify-between shrink-0 z-50 transition-transform duration-300 md:static md:translate-x-0 ${
+                            isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'
+                        }`}
+                    >
+                        <div>
+                            {/* Brand identity */}
+                            <div className="p-6 border-b border-slate-900 flex justify-between items-center">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                                        <h1 className="text-sm font-black text-slate-100 uppercase tracking-widest font-display">EliteCRM Cabinet</h1>
+                                    </div>
+                                    <p className="text-[9px] text-slate-500 tracking-wider font-bold mt-1 uppercase">Production agence</p>
+                                </div>
+                                <button 
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="md:hidden text-slate-400 hover:text-white p-1 rounded hover:bg-slate-900"
+                                    aria-label="Fermer le menu"
+                                >
+                                    <Icon name="X" size={16} />
+                                </button>
+                            </div>
+
+                            {/* Nav items list */}
+                            <nav className="py-6 flex flex-col">
+                                {[
+                                    { id: 'dashboard', label: 'Tableau de bord', icon: 'LayoutDashboard' },
+                                    { id: 'leads', label: 'Opportunités', icon: 'UserPlus' },
+                                    { id: 'clients', label: 'Portefeuille', icon: 'Users' },
+                                    { id: 'invoices', label: 'Facturation', icon: 'DollarSign' },
+                                    { id: 'actions', label: 'Planning', icon: 'Calendar' },
+                                    { id: 'statistics', label: 'Statistiques', icon: 'TrendingUp' }
+                                ].map(item => {
+                                    const isCurrent = view === item.id;
+                                    return (
+                                        <button 
+                                            key={item.id}
+                                            onClick={() => {
+                                                setView(item.id);
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className={`w-full flex items-center px-6 py-2.5 border-l-4 transition-all ${
+                                                isCurrent 
+                                                ? 'bg-blue-600/10 text-blue-400 border-blue-500' 
+                                                : 'text-slate-400 border-transparent hover:text-slate-100 hover:bg-slate-900/30'
+                                            }`}
+                                        >
+                                            <Icon name={item.icon} size={13} className="mr-3" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </nav>
+                        </div>
+
+                        {/* Interactive Agent profile card */}
+                        <div 
+                            onClick={() => {
+                                setIsProfileSwitcherOpen(true);
+                                setIsMobileMenuOpen(false);
+                            }}
+                            className="p-4 bg-slate-950/80 border-t border-slate-900 cursor-pointer hover:bg-slate-900 transition-all select-none group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-800 shrink-0 group-hover:border-blue-500 transition-all">
+                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentProfile.avatarSeed}`} alt={currentProfile.name[0]} className="w-full h-full" />
+                                </div>
+                                <div className="overflow-hidden flex-1">
+                                    <p className="text-xs font-bold text-slate-100 uppercase tracking-tight truncate group-hover:text-blue-400 transition-all">{currentProfile.name}</p>
+                                    <div className="flex items-center justify-between mt-0.5">
+                                        <p className="text-[9px] text-slate-500 font-bold uppercase truncate">{currentProfile.role}</p>
+                                        <span className="text-[8px] text-blue-500 font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Changer</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right core applet wrapper */}
+                    <div className="flex-1 flex flex-col min-w-0">
+                        {/* Global workspace header */}
+                        <header className="h-16 border-b border-slate-900 bg-slate-950/40 px-4 md:px-6 flex items-center justify-between shrink-0 relative z-10">
+                            <div className="flex items-center gap-2">
+                                {/* Hamburger Menu button for Smartphones */}
+                                <button 
+                                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                                    className="p-1.5 text-slate-400 hover:text-slate-100 md:hidden rounded hover:bg-slate-900 flex items-center justify-center"
+                                    aria-label="Ouvrir le menu"
+                                    id="hamburger-btn"
+                                >
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="3" y1="12" x2="21" y2="12" />
+                                        <line x1="3" y1="6" x2="21" x2="6" />
+                                        <line x1="3" y1="18" x2="21" y2="18" />
+                                    </svg>
+                                </button>
+                                
+                                <h2 className="text-xs font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                    {viewTitles[view]}
+                                </h2>
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest leading-none">Valeur Active</p>
+                                    <p className="text-sm font-bold font-mono text-blue-500 mt-0.5">{stats.pipelineValue.toLocaleString()} €</p>
+                                </div>
+                                <button 
+                                    onClick={handleDownloadGlobalReportPDF}
+                                    className="bg-slate-100 hover:bg-slate-200 text-slate-950 font-bold text-[9px] uppercase tracking-widest px-3 md:px-4 py-1.5 rounded flex items-center gap-1.5 transition-all shadow-lg"
+                                >
+                                    <Icon name="Download" size={11} /> <span className="hidden xs:inline">Rapport .PDF</span><span className="xs:hidden">.PDF</span>
+                                </button>
+                            </div>
+                        </header>
+
+                        {/* Views Content area */}
+                        <main className="flex-1 overflow-y-auto p-4 md:p-6 relative z-10">
+                            {view === 'dashboard' && <DashboardView />}
+                            {view === 'leads' && <LeadsView />}
+                            {view === 'clients' && <ClientsView />}
+                            {view === 'invoices' && <InvoicesView />}
+                            {view === 'actions' && <ActionsView />}
+                            {view === 'statistics' && <StatisticsView />}
+                        </main>
+                    </div>
+
+                    {/* Modals structures */}
+                    {isLeadModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-[1px]" onClick={() => setIsLeadModalOpen(false)} />
+                            <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl space-y-4">
+                                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">Créer une Opportunité</h3>
+                                    <button onClick={() => setIsLeadModalOpen(false)} className="text-slate-500 hover:text-white"><Icon name="X" size={16} /></button>
+                                </div>
+                                <form onSubmit={handleAddLeadSubmit} className="space-y-4 text-xs">
+                                    <div>
+                                        <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Nom de l'entreprise</label>
+                                        <input type="text" value={newLeadCompany} onChange={(e) => setNewLeadCompany(e.target.value)} required className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-2.5 text-slate-200 font-bold text-xs" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Contact</label>
+                                            <input type="text" value={newLeadContact} onChange={(e) => setNewLeadContact(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-2.5 text-slate-200 text-xs" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Email</label>
+                                            <input type="email" value={newLeadEmail} onChange={(e) => setNewLeadEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-2.5 text-slate-200 text-xs" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Cahier des charges / Enjeux</label>
+                                        <textarea value={newLeadNeed} onChange={(e) => setNewLeadNeed(e.target.value)} required className="w-full bg-slate-950 border border-slate-800 rounded h-16 p-2 text-slate-200 text-xs resize-none" rows="2" />
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div>
+                                            <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Budget prév.</label>
+                                            <input type="number" value={newLeadBudget} onChange={(e) => setNewLeadBudget(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-2.5 text-slate-200 font-bold" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">T°</label>
+                                            <select value={newLeadTemp} onChange={(e) => setNewLeadTemp(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-1.5 text-slate-200 font-black uppercase">
+                                                <option value="Chaud">Chaud</option>
+                                                <option value="Tiède">Tiède</option>
+                                                <option value="Froid">Froid</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Pôle</label>
+                                            <select value={newLeadService} onChange={(e) => setNewLeadService(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-1.5 text-slate-200 font-bold">
+                                                <option value="Web">Web</option>
+                                                <option value="SEO">SEO</option>
+                                                <option value="Design">Design</option>
+                                                <option value="Consulting">Consulting</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="w-full py-2 bg-blue-600 hover:bg-blue-700 font-bold uppercase tracking-widest text-[9px] rounded">Injecter en CRM</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {isActionModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-[1px]" onClick={() => setIsActionModalOpen(false)} />
+                            <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 relative z-10 w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl space-y-4">
+                                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">Ajouter une Tâche</h3>
+                                    <button onClick={() => setIsActionModalOpen(false)} className="text-slate-500 hover:text-white"><Icon name="X" size={16} /></button>
+                                </div>
+                                <form onSubmit={handleAddActionSubmit} className="space-y-4 text-xs">
+                                    <div>
+                                        <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Description</label>
+                                        <input type="text" value={newActionText} onChange={(e) => setNewActionText(e.target.value)} required className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-2.5 text-slate-200" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Attribuer à</label>
+                                        <select value={newActionLead} onChange={(e) => setNewActionLead(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-2 text-slate-200 font-semibold uppercase">
+                                            <option value="">Général / Aucun client</option>
+                                            {leads.map(l => (
+                                                <option key={l.id} value={l.id}>{l.companyName}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] text-slate-400 uppercase font-black tracking-wider block mb-1">Date d'échéance</label>
+                                        <input type="date" value={newActionDate} onChange={(e) => setNewActionDate(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded h-8 px-2.5 text-slate-200 font-mono" />
+                                    </div>
+                                    <button type="submit" className="w-full py-2 bg-blue-600 hover:bg-blue-700 font-bold uppercase tracking-widest text-[9px] rounded">Enregistrer la tâche</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {isProfileSwitcherOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-[1px]" onClick={() => setIsProfileSwitcherOpen(false)} />
+                            <div className="bg-slate-900 border border-slate-850 rounded-lg p-6 relative z-10 w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl space-y-4">
+                                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                                    <div>
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">Session en Cours</h3>
+                                        <p className="text-[8px] text-slate-500 font-bold uppercase mt-0.5">Membres autorisés de l'agence</p>
+                                    </div>
+                                    <button onClick={() => setIsProfileSwitcherOpen(false)} className="text-slate-500 hover:text-white"><Icon name="X" size={16} /></button>
+                                </div>
+                                <div className="space-y-3">
+                                    {AGENT_PROFILES.map(prof => {
+                                        const isAct = prof.id === currentProfile.id;
+                                        return (
+                                            <button 
+                                                key={prof.id}
+                                                onClick={() => {
+                                                    setCurrentProfile(prof);
+                                                    setIsProfileSwitcherOpen(false);
+                                                }}
+                                                className={`w-full text-left p-3.5 rounded-lg border flex items-center gap-3 transition-colors ${
+                                                    isAct ? 'bg-blue-600/10 border-blue-500/50' : 'bg-slate-950/40 border-slate-850 hover:bg-slate-850/50'
+                                                }`}
+                                            >
+                                                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-slate-800">
+                                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${prof.avatarSeed}`} alt={prof.name} className="w-full h-full" />
+                                                </div>
+                                                <div className="flex-1 overflow-hidden">
+                                                    <p className="text-xs font-black text-slate-200 uppercase tracking-tight truncate">{prof.name}</p>
+                                                    <p className="text-[9px] text-slate-500 font-black uppercase tracking-wide mt-0.5">{prof.role}</p>
+                                                </div>
+                                                {isAct && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
