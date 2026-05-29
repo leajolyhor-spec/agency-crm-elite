@@ -19,11 +19,13 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #070a13; }
         .active-menu { background-color: rgba(30, 41, 59, 0.5); color: #3b82f6; border-left: 4px solid #3b82f6; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-[#070a13] text-slate-100 antialiased min-h-screen">
 
-    <div class="lg:hidden flex items-center justify-between p-4 bg-[#0b0f19] border-b border-slate-800/60 sticky top-0 z-50">
+    <div class="lg:hidden flex items-center justify-between p-4 bg-[#0b0f19] border-b border-slate-800/60 fixed top-0 left-0 right-0 z-50">
         <div class="flex flex-col">
             <span class="font-bold text-sm text-white tracking-wide">ELITECRM CABINET</span>
             <span class="text-[9px] text-slate-500 uppercase tracking-widest">Production Agence</span>
@@ -34,13 +36,13 @@
     </div>
 
     <div class="flex min-h-screen relative">
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#0b0f19] border-r border-slate-800/60 flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0 lg:static lg:h-screen">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#0b0f19] border-r border-slate-800/60 flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0 lg:static lg:h-screen pt-16 lg:pt-0">
             <div class="p-6 hidden lg:flex flex-col">
                 <span class="font-bold text-md text-white tracking-wide">ELITECRM CABINET</span>
                 <span class="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">Production Agence</span>
             </div>
             
-            <nav class="flex-1 py-4 space-y-1">
+            <nav class="flex-1 py-4 space-y-1 overflow-y-auto no-scrollbar">
                 <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="dashboard">
                     📊 TABLEAU DE BORD
                 </button>
@@ -74,9 +76,8 @@
 
         <div id="sidebar-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/60 z-30 hidden lg:hidden"></div>
 
-        <main class="flex-1 p-4 lg:p-8 overflow-x-hidden w-full">
-            <div id="content-area" class="max-w-7xl mx-auto space-y-6">
-                </div>
+        <main class="flex-1 p-4 lg:p-8 overflow-x-hidden w-full pt-20 lg:pt-8">
+            <div id="content-area" class="max-w-7xl mx-auto space-y-6"></div>
         </main>
     </div>
 
@@ -98,16 +99,13 @@
             }
         }
 
-        // Système de navigation réel (Injecte le contenu dans la page sans alertes)
         function switchView(viewName) {
             const content = document.getElementById('content-area');
             
-            // Ferme le menu sur mobile après un clic
             if(!document.getElementById('sidebar').classList.contains('-translate-x-full')) {
                 toggleMenu();
             }
 
-            // Gestion visuelle des boutons actifs
             document.querySelectorAll('.nav-item').forEach(item => {
                 if(item.getAttribute('data-view') === viewName) {
                     item.className = "nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-blue-500 bg-[#1e293b]/40 border-l-4 border-blue-500 active-menu";
@@ -126,9 +124,7 @@
                             <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">
                                 VALEUR ACTIVE : <span class="text-blue-500 font-bold text-sm ml-1">25 000 €</span>
                             </div>
-                            <button class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200">
-                                .PDF
-                            </button>
+                            <button class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200">.PDF</button>
                         </div>
                     </div>
 
@@ -176,7 +172,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button onclick="switchView('planning')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4 hover:bg-slate-800/20 transition">VOIR TOUT MON PLANNING</button>
+                            <button onclick="switchView('planning')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4">VOIR TOUT MON PLANNING</button>
                         </div>
 
                         <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl flex flex-col justify-between">
@@ -186,35 +182,92 @@
                                     <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex justify-between items-center">
                                         <div>
                                             <p class="text-xs font-bold text-white">ACME CORP</p>
-                                            <p class="text-[9px] text-slate-500 uppercase mt-0.5">INV-1024</p>
+                                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-0.5">INV-1024</p>
                                         </div>
                                         <span class="text-xs font-bold text-white">15 000 €</span>
                                     </div>
+                                    <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex justify-between items-center">
+                                        <div>
+                                            <p class="text-xs font-bold text-white">STARLIGHT AGENCY</p>
+                                            <p class="text-[9px] text-slate-500 uppercase font-medium mt-0.5">INV-1023</p>
+                                        </div>
+                                        <span class="text-xs font-bold text-white">5 000 €</span>
+                                    </div>
                                 </div>
                             </div>
-                            <button onclick="switchView('facturation')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4 hover:bg-slate-800/20 transition">FACTURATION GÉNÉRALE</button>
+                            <button onclick="switchView('facturation')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4">FACTURATION GÉNÉRALE</button>
                         </div>
                     </div>
                 `;
-            } else {
-                // Vue propre et intégrée pour chaque onglet cliqué
+            } else if(viewName === 'opportunites') {
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-wider">
-                            <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> ${viewName.toUpperCase()}
-                        </div>
-                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 hover:text-white bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg transition">
-                            ⬅ RETOUR ACCUEIL
-                        </button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">👥 VUE OPPORTUNITÉS</div>
+                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
                     </div>
-                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-6 rounded-xl">
-                        <p class="text-xs text-slate-400 tracking-wide">Base de données de la section <span class="text-white font-semibold">${viewName.toUpperCase()}</span> connectée avec succès.</p>
+                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 rounded-xl overflow-hidden overflow-x-auto no-scrollbar">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-[#070a13] text-slate-400 uppercase font-bold tracking-wider border-b border-slate-800">
+                                <tr>
+                                    <th class="p-4">Entreprise</th><th class="p-4">Budget</th><th class="p-4">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/50">
+                                <tr class="hover:bg-slate-800/20"><td class="p-4 font-semibold text-white">ACME CORP</td><td class="p-4">15 000 €</td><td class="p-4 text-amber-400">Proposition</td></tr>
+                                <tr class="hover:bg-slate-800/20"><td class="p-4 font-semibold text-white">STARLIGHT AGENCY</td><td class="p-4">5 000 €</td><td class="p-4 text-emerald-400">Gagné</td></tr>
+                                <tr class="hover:bg-slate-800/20"><td class="p-4 font-semibold text-white">GLOBALTECH LTD</td><td class="p-4">8 500 €</td><td class="p-4 text-blue-400">En cours</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if(viewName === 'portefeuille') {
+                content.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💼 PORTEFEUILLE CLIENTS</div>
+                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-2">PROSPECTS</p><div class="p-3 bg-[#070a13] rounded-lg border border-slate-800 text-xs font-semibold">GlobalTech Ltd</div></div>
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-2">PROPOSITIONS</p><div class="p-3 bg-[#070a13] rounded-lg border border-slate-800 text-xs font-semibold">Acme Corp</div></div>
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-2">CONTRATS ACTIFS</p><div class="p-3 bg-[#070a13] rounded-lg border border-slate-800 text-xs font-semibold text-emerald-400">Starlight Agency</div></div>
+                    </div>
+                `;
+            } else if(viewName === 'facturation') {
+                content.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💳 COMPTABILITÉ & FACTURES</div>
+                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                    </div>
+                    <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl space-y-2 text-xs">
+                        <div class="flex justify-between border-b border-slate-800/50 pb-2 text-slate-400 font-bold"><span>FACTURE</span><span>MONTANT</span><span>STATUT</span></div>
+                        <div class="flex justify-between py-1"><span>INV-1024 (Acme Corp)</span><span class="font-bold">15 000 €</span><span class="text-amber-500">En attente</span></div>
+                        <div class="flex justify-between py-1"><span>INV-1023 (Starlight)</span><span class="font-bold">5 000 €</span><span class="text-emerald-500">Payée</span></div>
+                    </div>
+                `;
+            } else if(viewName === 'planning') {
+                content.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📅 AGENDA DE L'AGENCE</div>
+                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="p-4 bg-[#0b0f19] border border-slate-800 rounded-xl flex justify-between text-xs"><p class="font-semibold text-white">Lancement de l'audit SEO technique</p><p class="text-blue-400">Hier</p></div>
+                        <div class="p-4 bg-[#0b0f19] border border-slate-800 rounded-xl flex justify-between text-xs"><p class="font-semibold text-white">Appel de suivi client pour devis</p><p class="text-blue-400">Aujourd'hui</p></div>
+                    </div>
+                `;
+            } else if(viewName === 'statistiques') {
+                content.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📈 STATISTIQUES REVENUS</div>
+                        <button onclick="switchView('dashboard')" class="text-[10px] font-bold text-slate-400 bg-[#0b0f19] border border-slate-800/60 px-3 py-1.5 rounded-lg">⬅ RETOUR</button>
+                    </div>
+                    <div class="bg-[#0b0f19] border border-slate-800 p-6 rounded-xl text-center text-xs text-slate-400">
+                        Graphique des ventes : Objectif de conversion fixé à <span class="text-white font-bold">74%</span> atteint ce mois-ci.
                     </div>
                 `;
             }
         }
 
-        // Lancement au démarrage
         switchView('dashboard');
     </script>
 </body>
