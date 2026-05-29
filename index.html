@@ -26,6 +26,25 @@
 </head>
 <body class="bg-[#070a13] text-slate-100 antialiased min-h-screen">
 
+    <div id="login-screen" class="fixed inset-0 bg-[#070a13] z-50 hidden flex-col items-center justify-center p-4">
+        <div class="bg-[#0b0f19] border border-slate-800 p-8 rounded-2xl max-w-sm w-full text-center space-y-6 shadow-2xl">
+            <div>
+                <span class="font-bold text-xl text-white tracking-wide block">ELITECRM CABINET</span>
+                <span class="text-[10px] text-blue-500 uppercase tracking-widest font-semibold">Portail d'authentification</span>
+            </div>
+            <div class="space-y-3 text-left">
+                <label class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Sélectionner un profil</label>
+                <select id="login-user-select" class="w-full bg-[#070a13] border border-slate-700 rounded-lg p-3 text-xs text-white focus:border-blue-500 focus:outline-none">
+                    <option value="LÉA JOLY|CHEF DE PROJET SENIOR">Léa Joly (Chef de Projet)</option>
+                    <option value="DIRECTEUR AGENCE|ADMINISTRATEUR">Directeur Agence (Admin)</option>
+                </select>
+            </div>
+            <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-lg tracking-wider uppercase transition">
+                Se connecter au CRM
+            </button>
+        </div>
+    </div>
+
     <div class="lg:hidden flex items-center justify-between p-4 bg-[#0b0f19] border-b border-slate-800/60 fixed top-0 left-0 right-0 z-50">
         <div class="flex flex-col">
             <span class="font-bold text-sm text-white tracking-wide">ELITECRM CABINET</span>
@@ -50,13 +69,29 @@
                 <button onclick="switchView('statistiques')" class="nav-item w-full flex items-center gap-3 px-6 py-3 text-xs font-bold tracking-wider text-slate-400 hover:bg-slate-800/30 hover:text-slate-200" data-view="statistiques">📈 STATISTIQUES</button>
             </nav>
 
-            <div class="p-4 border-t border-slate-800/40 bg-[#090d16]">
-                <div class="flex items-center gap-3 cursor-pointer p-1.5 rounded-lg hover:bg-slate-800/40" onclick="toggleProfile()">
-                    <div class="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center text-sm">👩‍💻</div>
-                    <div>
-                        <p id="prof-name" class="text-xs font-bold text-slate-200 tracking-wide">LÉA JOLY</p>
-                        <p id="prof-role" class="text-[9px] text-slate-500 tracking-wider font-medium uppercase mt-0.5">CHEF DE PROJET SENIOR</p>
+            <div class="p-4 border-t border-slate-800/40 bg-[#090d16] relative">
+                <div id="profile-dropdown" class="absolute bottom-16 left-4 right-4 bg-[#0b0f19] border border-slate-800 rounded-xl shadow-2xl p-2 hidden z-50 space-y-1">
+                    <button onclick="switchAccount('LÉA JOLY', 'CHEF DE PROJET SENIOR')" class="w-full text-left text-[11px] p-2 rounded hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2">
+                        <span>👩‍💻</span> Léa Joly (Chef de Projet)
+                    </button>
+                    <button onclick="switchAccount('DIRECTEUR AGENCE', 'ADMINISTRATEUR')" class="w-full text-left text-[11px] p-2 rounded hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2">
+                        <span>⚡</span> Directeur Agence (Admin)
+                    </button>
+                    <div class="border-t border-slate-800 my-1"></div>
+                    <button onclick="logoutAccount()" class="w-full text-left text-[11px] p-2 rounded hover:bg-red-950 text-red-400 flex items-center gap-2 font-bold">
+                        <span>🚪</span> Se déconnecter...
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between cursor-pointer p-1.5 rounded-lg hover:bg-slate-800/40" onclick="toggleProfileMenu()">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-sm font-bold">U</div>
+                        <div>
+                            <p id="prof-name" class="text-xs font-bold text-slate-200 tracking-wide">LÉA JOLY</p>
+                            <p id="prof-role" class="text-[9px] text-slate-500 tracking-wider font-medium uppercase mt-0.5">CHEF DE PROJET SENIOR</p>
+                        </div>
                     </div>
+                    <span class="text-slate-500 text-[10px]">▲</span>
                 </div>
             </div>
         </aside>
@@ -69,8 +104,10 @@
     </div>
 
     <script>
-        // --- BASE DE DONNÉES LOCALSTORAGE (Garde les infos même après actualisation) ---
-        let appsData = JSON.parse(localStorage.getItem('elite_crm_data')) || {
+        // --- BASE DE DONNÉES LOCALSTORAGE ---
+        let appsData = JSON.parse(localStorage.getItem('elite_crm_data_v2')) || {
+            currentUser: { name: "LÉA JOLY", role: "CHEF DE PROJET SENIOR" },
+            isLoggedOut: false,
             leads: [
                 { id: 1, name: "ACME CORP", budget: "15 000 €", status: "Proposition" },
                 { id: 2, name: "STARLIGHT AGENCY", budget: "5 000 €", status: "Gagné" },
@@ -87,7 +124,48 @@
         };
 
         function syncData() {
-            localStorage.setItem('elite_crm_data', JSON.stringify(appsData));
+            localStorage.setItem('elite_crm_data_v2', JSON.stringify(appsData));
+        }
+
+        function initSession() {
+            if(appsData.isLoggedOut) {
+                document.getElementById('login-screen').style.display = 'flex';
+            } else {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('prof-name').innerText = appsData.currentUser.name;
+                document.getElementById('prof-role').innerText = appsData.currentUser.role;
+            }
+        }
+
+        // --- GESTION COMPTE ET SESSIONS ---
+        function toggleProfileMenu() {
+            document.getElementById('profile-dropdown').classList.toggle('hidden');
+        }
+
+        function switchAccount(name, role) {
+            appsData.currentUser = { name, role };
+            syncData();
+            document.getElementById('prof-name').innerText = name;
+            document.getElementById('prof-role').innerText = role;
+            document.getElementById('profile-dropdown').classList.add('hidden');
+            let activeNav = document.querySelector('.active-menu');
+            if(activeNav) switchView(activeNav.getAttribute('data-view'));
+        }
+
+        function logoutAccount() {
+            appsData.isLoggedOut = true;
+            syncData();
+            document.getElementById('profile-dropdown').classList.add('hidden');
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        function handleLogin() {
+            let select = document.getElementById('login-user-select').value.split('|');
+            appsData.currentUser = { name: select[0], role: select[1] };
+            appsData.isLoggedOut = false;
+            syncData();
+            initSession();
+            switchView('dashboard');
         }
 
         function toggleMenu() {
@@ -95,30 +173,27 @@
             document.getElementById('sidebar-overlay').classList.toggle('hidden');
         }
 
-        function toggleProfile() {
-            let nameElem = document.getElementById('prof-name');
-            let roleElem = document.getElementById('prof-role');
-            if(nameElem.innerText === "LÉA JOLY") {
-                nameElem.innerText = "DIRECTEUR AGENCE";
-                roleElem.innerText = "ADMINISTRATEUR";
-            } else {
-                nameElem.innerText = "LÉA JOLY";
-                roleElem.innerText = "CHEF DE PROJET SENIOR";
-            }
-        }
-
         function toggleTask(id) {
             let task = appsData.tasks.find(t => t.id === id);
             if(task) {
                 task.done = !task.done;
                 syncData();
-                // Si on est sur le dashboard ou planning, on rafraîchit la vue courante
                 let activeNav = document.querySelector('.active-menu');
                 if(activeNav) switchView(activeNav.getAttribute('data-view'));
             }
         }
 
-        // --- SYSTÈME D'ONGLETS INTERACTIFS ET CONTENUS RÉELS ---
+        // --- EXCLUSIF : MODIFIER LE BUDGET DANS LES OPPORTUNITES ---
+        function editBudget(index) {
+            let newBudget = prompt("Modifier le montant du budget pour " + appsData.leads[index].name + " :", appsData.leads[index].budget);
+            if(newBudget !== null && newBudget.trim() !== "") {
+                appsData.leads[index].budget = newBudget.trim();
+                syncData();
+                switchView('opportunites');
+            }
+        }
+
+        // --- SYSTÈME D'ONGLETS ---
         function switchView(viewName) {
             const content = document.getElementById('content-area');
             if(!document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleMenu();
@@ -132,12 +207,10 @@
             });
 
             if(viewName === 'dashboard') {
-                // Calculs des cartes dynamiques
                 let pipeTotal = appsData.leads.reduce((acc, curr) => acc + parseInt(curr.budget.replace(/[^0-9]/g, '') || 0), 0);
                 let gagneCount = appsData.leads.filter(l => l.status === 'Gagné').length;
                 let totalEncaisse = appsData.invoices.filter(i => i.status === 'PAYÉ').reduce((acc, curr) => acc + parseInt(curr.amount.replace(/[^0-9]/g, '') || 0), 0);
 
-                // Génération des lignes de tâches modifiables
                 let tasksHTML = appsData.tasks.map(t => `
                     <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex items-start gap-3">
                         <input type="checkbox" onchange="toggleTask(${t.id})" ${t.done ? 'checked' : ''} class="mt-0.5 rounded bg-slate-800 border-slate-700">
@@ -148,7 +221,6 @@
                     </div>
                 `).join('');
 
-                // Génération des factures
                 let invoicesHTML = appsData.invoices.map(i => `
                     <div class="p-3 bg-[#070a13] border border-slate-800/40 rounded-lg flex justify-between items-center">
                         <div>
@@ -168,12 +240,8 @@
                             <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> TABLEAU DE BORD
                         </div>
                         <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">
-                                VALEUR ACTIVE : <span class="text-blue-500 font-bold text-sm ml-1">${pipeTotal.toLocaleString()} €</span>
-                            </div>
-                            <button onclick="downloadPDFReport()" class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200 hover:bg-slate-100 transition">
-                                .PDF
-                            </button>
+                            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">VALEUR ACTIVE : <span class="text-blue-500 font-bold text-sm ml-1">${pipeTotal.toLocaleString()} €</span></div>
+                            <button onclick="downloadPDFReport()" class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200 hover:bg-slate-100 transition">.PDF</button>
                         </div>
                     </div>
 
@@ -199,7 +267,10 @@
                 let rows = appsData.leads.map((l, index) => `
                     <tr class="hover:bg-slate-800/20">
                         <td class="p-4 font-semibold text-white">${l.name}</td>
-                        <td class="p-4">${l.budget}</td>
+                        <td class="p-4 font-mono text-slate-300">
+                            <span class="mr-2">${l.budget}</span>
+                            <button onclick="editBudget(${index})" class="text-slate-500 hover:text-blue-400 text-[11px]" title="Modifier le budget">✏️</button>
+                        </td>
                         <td class="p-4">
                             <select onchange="updateLeadStatus(${index}, this.value)" class="bg-[#070a13] text-xs text-slate-300 border border-slate-700 rounded px-2 py-1">
                                 <option value="Prospect" ${l.status==='Prospect'?'selected':''}>Prospect</option>
@@ -231,8 +302,7 @@
 
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💼 PIPELINE DU PORTEFEUILLE (KANBAN DYNAMIQUE)</div>
-                        <button onclick="switchView('opportunites')" class="text-[10px] font-bold bg-[#0b0f19] border border-slate-800 px-3 py-1.5 rounded-lg">MODIFIER DEPUIS LES OPPORTUNITÉS</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💼 PIPELINE DU PORTEFEUILLE (KANBAN)</div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-3 tracking-wider">📥 PROSPECTS ENTRANTS</p>${col1 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
@@ -286,103 +356,18 @@
                     <div class="space-y-3">${list}</div>
                 `;
             } else if(viewName === 'statistiques') {
-                // Création d'un histogramme 100% css natif
-                content.innerHTML = `
-                    <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📈 DIAGRAMME DE CONVERSION DE L'AGENCE</div>
-                    </div>
-                    <div class="bg-[#0b0f19] border border-slate-800 p-6 rounded-xl shadow-xl">
-                        <p class="text-xs text-slate-400 mb-6 font-medium">Répartition des budgets (en EUR) par affaire enregistrée dans le CRM :</p>
-                        
-                        <div class="flex items-end justify-around h-48 border-b border-l border-slate-800 px-4 pt-4">
-                            <div class="w-12 bg-blue-600/80 rounded-t-lg relative group transition-all hover:bg-blue-500" style="height: 75%;">
-                                <span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] font-bold text-white">15k €</span>
-                            </div>
-                            <div class="w-12 bg-emerald-600/80 rounded-t-lg relative group transition-all hover:bg-emerald-500" style="height: 35%;">
-                                <span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] font-bold text-white">5k €</span>
-                            </div>
-                            <div class="w-12 bg-indigo-600/80 rounded-t-lg relative group transition-all hover:bg-indigo-500" style="height: 50%;">
-                                <span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] font-bold text-white">8.5k €</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-around text-[10px] text-slate-500 font-bold mt-3 tracking-wide">
-                            <div class="w-12 text-center truncate">ACME CORP</div>
-                            <div class="w-12 text-center truncate">STARLIGHT</div>
-                            <div class="w-12 text-center truncate">GLOBALTECH</div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
+                // --- DESIGN PREMIUM ULTRA PROFESSIONNEL DU GRAPHIQUE COMPTABLE ---
+                let maxBudget = 20000;
+                let barsHTML = appsData.leads.map(l => {
+                    let numericalValue = parseInt(l.budget.replace(/[^0-9]/g, '') || 0);
+                    let percentage = (numericalValue / maxBudget) * 100;
+                    
+                    // Couleur dynamique suivant la phase du lead
+                    let colorClass = "from-blue-600 to-cyan-500";
+                    if(l.status === 'Gagné') colorClass = "from-emerald-600 to-teal-500";
+                    if(l.status === 'Prospect') colorClass = "from-slate-600 to-slate-500";
 
-        // --- ENREGISTREMENT DE DONNÉES (PROMPTS) ---
-        function addLeadPrompt() {
-            let name = prompt("Nom de l'entreprise :");
-            let budget = prompt("Budget estimé (ex: 12 000 €) :");
-            if(name && budget) {
-                appsData.leads.push({ id: Date.now(), name: name.toUpperCase(), budget, status: "Prospect" });
-                syncData(); switchView('opportunites');
-            }
-        }
-
-        function updateLeadStatus(index, status) {
-            appsData.leads[index].status = status;
-            syncData();
-        }
-
-        function addInvoicePrompt() {
-            let client = prompt("Nom du client à facturer :");
-            let amount = prompt("Montant (ex: 4 200 €) :");
-            if(client && amount) {
-                appsData.invoices.push({ id: Math.floor(1000 + Math.random() * 9000), client: client.toUpperCase(), amount, status: "ATTENTE" });
-                syncData(); switchView('facturation');
-            }
-        }
-
-        function updateInvoiceStatus(index, status) {
-            appsData.invoices[index].status = status;
-            syncData();
-        }
-
-        function addTaskPrompt() {
-            let text = prompt("Intitulé du rendez-vous / de la tâche :");
-            let client = prompt("Client concerné :");
-            if(text && client) {
-                appsData.tasks.push({ id: Date.now(), text, client: client.toUpperCase(), date: "2026-05-29", done: false });
-                syncData(); switchView('planning');
-            }
-        }
-
-        // --- GÉNÉRATEUR DE PDF REELS (MOTEUR JSPDF) ---
-        function downloadPDFReport() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFont("Helvetica", "bold"); doc.text("ELITECRM CABINET - AGENT REVENUE REPORT", 14, 20);
-            doc.setFont("Helvetica", "normal"); doc.setFontSize(10);
-            doc.text("Généré via le terminal EliteCRM mobile le : " + new Date().toLocaleDateString(), 14, 28);
-            doc.text("-----------------------------------------------------------------------------------------", 14, 34);
-            
-            let y = 45;
-            appsData.leads.forEach(l => {
-                doc.text(`- Affaire: ${l.name} | Volume budget: ${l.budget} | Phase: ${l.status}`, 14, y);
-                y += 10;
-            });
-            doc.save("rapport-general-crm.pdf");
-        }
-
-        function downloadSingleInvoice(id, client, amount, status) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFont("Helvetica", "bold"); doc.text(`FACTURE COMMERCIALE N°${id}`, 14, 20);
-            doc.setFont("Helvetica", "normal"); doc.setFontSize(11);
-            doc.text(`Client destinataire : ${client}`, 14, 35);
-            doc.text(`Montant total de la prestation : ${amount}`, 14, 45);
-            doc.text(`Règlement enregistré sous le statut : ${status}`, 14, 55);
-            doc.save(`facture-inv-${id}.pdf`);
-        }
-
-        switchView('dashboard');
-    </script>
-</body>
-</html>
+                    return `
+                        <div class="flex flex-col items-center flex-1 group cursor-pointer">
+                            <div class="w-full sm:w-16 h-64 bg-slate-900/50 border border-slate-800/40 rounded-t-xl flex items-end justify-center relative p-0.5">
+                                <div class="w-full rounded-t-lg bg-gradient-to-t ${colorClass} transition-all duration-700 ease-out shadow-lg group-hover:brightness-125" style="height:
