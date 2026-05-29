@@ -34,13 +34,13 @@
             </div>
             <div class="space-y-3 text-left">
                 <label class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Sélectionner un profil</label>
-                <select id="login-user-select" class="w-full bg-[#070a13] border border-slate-700 rounded-lg p-3 text-xs text-white focus:border-blue-500 focus:outline-none">
+                <select id="login-user-select" class="w-full bg-[#070a13] border border-slate-700 rounded-lg p-3 text-xs text-white">
                     <option value="LÉA JOLY|CHEF DE PROJET SENIOR">Léa Joly (Chef de Projet)</option>
                     <option value="DIRECTEUR AGENCE|ADMINISTRATEUR">Directeur Agence (Admin)</option>
                 </select>
             </div>
             <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-lg tracking-wider uppercase transition">
-                Se connecter au CRM
+                Se connecter
             </button>
         </div>
     </div>
@@ -75,7 +75,7 @@
                         <span>👩‍💻</span> Léa Joly (Chef de Projet)
                     </button>
                     <button onclick="switchAccount('DIRECTEUR AGENCE', 'ADMINISTRATEUR')" class="w-full text-left text-[11px] p-2 rounded hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2">
-                        <span>⚡</span> Directeur Agence (Admin)
+                        <span>💼</span> Directeur Agence (Admin)
                     </button>
                     <div class="border-t border-slate-800 my-1"></div>
                     <button onclick="logoutAccount()" class="w-full text-left text-[11px] p-2 rounded hover:bg-red-950 text-red-400 flex items-center gap-2 font-bold">
@@ -85,7 +85,7 @@
 
                 <div class="flex items-center justify-between cursor-pointer p-1.5 rounded-lg hover:bg-slate-800/40" onclick="toggleProfileMenu()">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-sm font-bold">U</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-sm font-bold">👤</div>
                         <div>
                             <p id="prof-name" class="text-xs font-bold text-slate-200 tracking-wide">LÉA JOLY</p>
                             <p id="prof-role" class="text-[9px] text-slate-500 tracking-wider font-medium uppercase mt-0.5">CHEF DE PROJET SENIOR</p>
@@ -104,8 +104,8 @@
     </div>
 
     <script>
-        // --- BASE DE DONNÉES LOCALSTORAGE ---
-        let appsData = JSON.parse(localStorage.getItem('elite_crm_data_v2')) || {
+        // --- DATA OBJECT INITIALIZATION FIRST ---
+        let appsData = JSON.parse(localStorage.getItem('elite_crm_v3_store')) || {
             currentUser: { name: "LÉA JOLY", role: "CHEF DE PROJET SENIOR" },
             isLoggedOut: false,
             leads: [
@@ -124,20 +124,15 @@
         };
 
         function syncData() {
-            localStorage.setItem('elite_crm_data_v2', JSON.stringify(appsData));
+            localStorage.setItem('elite_crm_v3_store', JSON.stringify(appsData));
         }
 
-        function initSession() {
-            if(appsData.isLoggedOut) {
-                document.getElementById('login-screen').style.display = 'flex';
-            } else {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('prof-name').innerText = appsData.currentUser.name;
-                document.getElementById('prof-role').innerText = appsData.currentUser.role;
-            }
+        // --- INTERACTIVE NAVIGATION AND UTILITIES DEFINITIONS ---
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.toggle('hidden');
         }
 
-        // --- GESTION COMPTE ET SESSIONS ---
         function toggleProfileMenu() {
             document.getElementById('profile-dropdown').classList.toggle('hidden');
         }
@@ -164,13 +159,10 @@
             appsData.currentUser = { name: select[0], role: select[1] };
             appsData.isLoggedOut = false;
             syncData();
-            initSession();
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('prof-name').innerText = appsData.currentUser.name;
+            document.getElementById('prof-role').innerText = appsData.currentUser.role;
             switchView('dashboard');
-        }
-
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-            document.getElementById('sidebar-overlay').classList.toggle('hidden');
         }
 
         function toggleTask(id) {
@@ -183,7 +175,6 @@
             }
         }
 
-        // --- EXCLUSIF : MODIFIER LE BUDGET DANS LES OPPORTUNITES ---
         function editBudget(index) {
             let newBudget = prompt("Modifier le montant du budget pour " + appsData.leads[index].name + " :", appsData.leads[index].budget);
             if(newBudget !== null && newBudget.trim() !== "") {
@@ -193,7 +184,44 @@
             }
         }
 
-        // --- SYSTÈME D'ONGLETS ---
+        function addLeadPrompt() {
+            let name = prompt("Nom de l'entreprise :");
+            let budget = prompt("Budget estimé (ex: 12 000 €) :");
+            if(name && budget) {
+                appsData.leads.push({ id: Date.now(), name: name.toUpperCase(), budget, status: "Prospect" });
+                syncData(); switchView('opportunites');
+            }
+        }
+
+        function updateLeadStatus(index, status) {
+            appsData.leads[index].status = status;
+            syncData();
+        }
+
+        function addInvoicePrompt() {
+            let client = prompt("Nom du client à facturer :");
+            let amount = prompt("Montant (ex: 4 200 €) :");
+            if(client && amount) {
+                appsData.invoices.push({ id: Math.floor(1000 + Math.random() * 9000), client: client.toUpperCase(), amount, status: "ATTENTE" });
+                syncData(); switchView('facturation');
+            }
+        }
+
+        function updateInvoiceStatus(index, status) {
+            appsData.invoices[index].status = status;
+            syncData();
+        }
+
+        function addTaskPrompt() {
+            let text = prompt("Intitulé du rendez-vous / de la tâche :");
+            let client = prompt("Client concerné :");
+            if(text && client) {
+                appsData.tasks.push({ id: Date.now(), text, client: client.toUpperCase(), date: "2026-05-29", done: false });
+                syncData(); switchView('planning');
+            }
+        }
+
+        // --- VIEW CONTROLLER ---
         function switchView(viewName) {
             const content = document.getElementById('content-area');
             if(!document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleMenu();
@@ -229,7 +257,7 @@
                         </div>
                         <div class="text-right">
                             <p class="text-xs font-bold text-white">${i.amount}</p>
-                            <span class="text-[8px] font-bold ${i.status === 'PAYÉ' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'} px-1.5 py-0.5 rounded border block mt-1">${i.status}</span>
+                            <span class="text-[8px] font-bold ${i.status === 'PAYÉ' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'} px-1.5 py-0.5 rounded border block mt-1">${i.status}</span>
                         </div>
                     </div>
                 `).join('');
@@ -239,40 +267,35 @@
                         <div class="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-wider">
                             <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> TABLEAU DE BORD
                         </div>
-                        <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">VALEUR ACTIVE : <span class="text-blue-500 font-bold text-sm ml-1">${pipeTotal.toLocaleString()} €</span></div>
-                            <button onclick="downloadPDFReport()" class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200 hover:bg-slate-100 transition">.PDF</button>
-                        </div>
+                        <button onclick="downloadPDFReport()" class="bg-white text-slate-950 font-bold text-xs px-3 py-1.5 rounded border border-slate-200 self-start sm:self-auto">.PDF</button>
                     </div>
-
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">VALEUR PIPELINE</p><p class="text-2xl font-bold text-white mt-1">${pipeTotal.toLocaleString()} €</p><p class="text-[9px] text-slate-500 uppercase font-medium mt-1">DOSSIERS QUALIFIÉS</p></div>
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">CLIENTS GAGNÉS</p><p class="text-2xl font-bold text-white mt-1">${gagneCount}</p><p class="text-[9px] text-slate-500 uppercase font-medium mt-1">CONTRATS SIGNÉS ACTIFS</p></div>
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">OPPORTUNITÉS TOTALES</p><p class="text-2xl font-bold text-white mt-1">${appsData.leads.length}</p><p class="text-[9px] text-slate-500 uppercase font-medium mt-1">PROSPECTS EN BASE CRM</p></div>
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TOTAL ENCAISSÉ</p><p class="text-2xl font-bold text-white mt-1">${totalEncaisse.toLocaleString()} €</p><p class="text-[9px] text-slate-500 uppercase font-medium mt-1">FACTURES PAYÉES SÉCURISÉES</p></div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">VALEUR PIPELINE</p><p class="text-2xl font-bold text-white mt-1">${pipeTotal.toLocaleString()} €</p></div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">CLIENTS GAGNÉS</p><p class="text-2xl font-bold text-white mt-1">${gagneCount}</p></div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">OPPORTUNITÉS TOTALES</p><p class="text-2xl font-bold text-white mt-1">${appsData.leads.length}</p></div>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl"><p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TOTAL ENCAISSÉ</p><p class="text-2xl font-bold text-white mt-1">${totalEncaisse.toLocaleString()} €</p></div>
                     </div>
-
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl lg:col-span-2 flex flex-col justify-between">
-                            <div><h3 class="text-xs font-bold text-slate-300 uppercase mb-4">🗓 ACTIONS RÉCENTES (A COCHER)</h3><div class="space-y-3">${tasksHTML}</div></div>
-                            <button onclick="switchView('planning')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4">GÉRER MON PLANNING</button>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl lg:col-span-2 space-y-4">
+                            <h3 class="text-xs font-bold text-slate-300 uppercase">🗓 ACTIONS RÉCENTES (À COCHER)</h3>
+                            <div class="space-y-3">${tasksHTML}</div>
                         </div>
-                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl flex flex-col justify-between">
-                            <div><h3 class="text-xs font-bold text-slate-300 uppercase mb-4">💰 ÉMISSIONS COMPTABLES</h3><div class="space-y-3">${invoicesHTML}</div></div>
-                            <button onclick="switchView('facturation')" class="w-full text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-[#070a13] border border-slate-800/60 py-2.5 rounded-lg mt-4">OUVRIR LA FACTURATION</button>
+                        <div class="bg-[#0b0f19]/80 border border-slate-800/60 p-5 rounded-xl space-y-4">
+                            <h3 class="text-xs font-bold text-slate-300 uppercase">💰 ÉMISSIONS COMPTABLES</h3>
+                            <div class="space-y-3">${invoicesHTML}</div>
                         </div>
                     </div>
                 `;
             } else if(viewName === 'opportunites') {
                 let rows = appsData.leads.map((l, index) => `
-                    <tr class="hover:bg-slate-800/20">
+                    <tr class="hover:bg-slate-800/20 border-b border-slate-800/50">
                         <td class="p-4 font-semibold text-white">${l.name}</td>
-                        <td class="p-4 font-mono text-slate-300">
-                            <span class="mr-2">${l.budget}</span>
-                            <button onclick="editBudget(${index})" class="text-slate-500 hover:text-blue-400 text-[11px]" title="Modifier le budget">✏️</button>
+                        <td class="p-4 font-mono text-slate-300 flex items-center justify-between">
+                            <span>${l.budget}</span>
+                            <button onclick="editBudget(${index})" class="text-blue-500 hover:text-blue-400 font-bold text-sm px-2">✏️ Modifier</button>
                         </td>
                         <td class="p-4">
-                            <select onchange="updateLeadStatus(${index}, this.value)" class="bg-[#070a13] text-xs text-slate-300 border border-slate-700 rounded px-2 py-1">
+                            <select onchange="updateLeadStatus(${index}, this.value)" class="bg-[#070a13] text-xs text-slate-300 border border-slate-700 rounded px-2 py-1 focus:outline-none">
                                 <option value="Prospect" ${l.status==='Prospect'?'selected':''}>Prospect</option>
                                 <option value="Proposition" ${l.status==='Proposition'?'selected':''}>Proposition</option>
                                 <option value="Gagné" ${l.status==='Gagné'?'selected':''}>Gagné</option>
@@ -283,31 +306,31 @@
 
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">👥 GESTION DES OPPORTUNITÉS</div>
-                        <button onclick="addLeadPrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ AJOUTER UN PROSPECT</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">👥 OPPORTUNITÉS</div>
+                        <button onclick="addLeadPrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ AJOUTER</button>
                     </div>
                     <div class="bg-[#0b0f19]/80 border border-slate-800/60 rounded-xl overflow-hidden shadow-xl">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead class="bg-[#070a13] text-slate-400 uppercase font-bold border-b border-slate-800">
-                                <tr><th class="p-4">Entreprise</th><th class="p-4">Budget Estimé</th><th class="p-4">Phase de Vente</th></tr>
+                                <tr><th class="p-4">Entreprise</th><th class="p-4">Budget</th><th class="p-4">Statut</th></tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-800/50">${rows}</tbody>
+                            <tbody class="divide-y divide-slate-800/30">${rows}</tbody>
                         </table>
                     </div>
                 `;
             } else if(viewName === 'portefeuille') {
                 let col1 = appsData.leads.filter(l => l.status === 'Prospect').map(l => `<div class="p-3 bg-[#070a13] rounded-lg border border-slate-800 mb-2 font-semibold text-xs">${l.name} (${l.budget})</div>`).join('');
-                let col2 = appsData.leads.filter(l => l.status === 'Proposition').map(l => `<div class="p-3 bg-[#070a13] rounded-lg border border-blue-900/50 mb-2 font-semibold text-xs text-blue-400">${l.name} (${l.budget})</div>`).join('');
-                let col3 = appsData.leads.filter(l => l.status === 'Gagné').map(l => `<div class="p-3 bg-[#070a13] rounded-lg border border-emerald-900/50 mb-2 font-semibold text-xs text-emerald-400">${l.name} (${l.budget})</div>`).join('');
+                let col2 = appsData.leads.filter(l => l.status === 'Proposition').map(l => `<div class="p-3 bg-[#070a13] rounded-lg border border-blue-900/40 mb-2 font-semibold text-xs text-blue-400">${l.name} (${l.budget})</div>`).join('');
+                let col3 = appsData.leads.filter(l => l.status === 'Gagné').map(l => `<div class="p-3 bg-[#070a13] rounded-lg border border-emerald-900/40 mb-2 font-semibold text-xs text-emerald-400">${l.name} (${l.budget})</div>`).join('');
 
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💼 PIPELINE DU PORTEFEUILLE (KANBAN)</div>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💼 PORTEFEUILLE (KANBAN)</div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-3 tracking-wider">📥 PROSPECTS ENTRANTS</p>${col1 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
-                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-blue-400 font-bold uppercase mb-3 tracking-wider">📝 OFFRES TRANSMISES</p>${col2 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
-                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-emerald-400 font-bold uppercase mb-3 tracking-wider">✅ CONTRATS SIGNÉS</p>${col3 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-400 font-bold uppercase mb-3">📥 PROSPECTS</p>${col1 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-blue-400 font-bold uppercase mb-3">📝 PROPOSITIONS</p>${col2 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
+                        <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-emerald-400 font-bold uppercase mb-3">✅ GAGNÉS</p>${col3 || '<p class="text-[10px] text-slate-600 italic">Vide</p>'}</div>
                     </div>
                 `;
             } else if(viewName === 'facturation') {
@@ -315,22 +338,22 @@
                     <div class="p-4 bg-[#0b0f19] border border-slate-800 rounded-xl flex justify-between items-center text-xs">
                         <div>
                             <p class="font-bold text-white">${i.client} - INV-${i.id}</p>
-                            <p class="text-slate-500 mt-1">Montant global : <span class="text-white font-medium">${i.amount}</span></p>
+                            <p class="text-slate-500 mt-1">Montant : <span class="text-white font-medium">${i.amount}</span></p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <select onchange="updateInvoiceStatus(${idx}, this.value)" class="bg-[#070a13] text-slate-300 text-[11px] border border-slate-700 rounded p-1">
+                            <select onchange="updateInvoiceStatus(${idx}, this.value)" class="bg-[#070a13] text-slate-300 border border-slate-700 rounded p-1 focus:outline-none">
                                 <option value="ATTENTE" ${i.status==='ATTENTE'?'selected':''}>ATTENTE</option>
                                 <option value="PAYÉ" ${i.status==='PAYÉ'?'selected':''}>PAYÉ</option>
                             </select>
-                            <button onclick="downloadSingleInvoice(${i.id}, '${i.client}', '${i.amount}', '${i.status}')" class="bg-slate-800 border border-slate-700 text-slate-200 px-2.5 py-1 rounded text-[11px] font-bold hover:bg-slate-700">TÉLÉCHARGER</button>
+                            <button onclick="downloadSingleInvoice(${i.id}, '${i.client}', '${i.amount}', '${i.status}')" class="bg-slate-800 border border-slate-700 text-slate-200 px-3 py-1 rounded text-xs font-bold hover:bg-slate-700">Télécharger PDF</button>
                         </div>
                     </div>
                 `).join('');
 
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💳 ENREGISTREMENT ET ÉMISSION DE FACTURES</div>
-                        <button onclick="addInvoicePrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ AJOUTER UNE FACTURE</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">💳 FACTURATION</div>
+                        <button onclick="addInvoicePrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ FACTURER</button>
                     </div>
                     <div class="space-y-3">${rows}</div>
                 `;
@@ -344,30 +367,101 @@
                                 <p class="text-slate-500 text-[10px] mt-0.5">${t.client}</p>
                             </div>
                         </div>
-                        <span class="text-[10px] font-mono text-slate-400 bg-[#070a13] border border-slate-800 px-2 py-0.5 rounded">${t.date}</span>
+                        <span class="text-[10px] text-slate-400 bg-[#070a13] border border-slate-800 px-2 py-0.5 rounded">${t.date}</span>
                     </div>
                 `).join('');
 
                 content.innerHTML = `
                     <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
-                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📅 AGENDA DU CABINET (MODIFIABLE)</div>
-                        <button onclick="addTaskPrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ PLANIFIER UNE ACTION</button>
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📅 PLANNING / AGENDA</div>
+                        <button onclick="addTaskPrompt()" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">+ PLANIFIER</button>
                     </div>
                     <div class="space-y-3">${list}</div>
                 `;
             } else if(viewName === 'statistiques') {
-                // --- DESIGN PREMIUM ULTRA PROFESSIONNEL DU GRAPHIQUE COMPTABLE ---
-                let maxBudget = 20000;
+                // --- GRAPHIQUE ULTRA PREMIUM CONNECTÉ ---
+                let maxBudget = 25000;
                 let barsHTML = appsData.leads.map(l => {
                     let numericalValue = parseInt(l.budget.replace(/[^0-9]/g, '') || 0);
                     let percentage = (numericalValue / maxBudget) * 100;
                     
-                    // Couleur dynamique suivant la phase du lead
-                    let colorClass = "from-blue-600 to-cyan-500";
+                    let colorClass = "from-blue-600 to-indigo-500";
                     if(l.status === 'Gagné') colorClass = "from-emerald-600 to-teal-500";
-                    if(l.status === 'Prospect') colorClass = "from-slate-600 to-slate-500";
+                    if(l.status === 'Prospect') colorClass = "from-slate-700 to-slate-500";
 
                     return `
-                        <div class="flex flex-col items-center flex-1 group cursor-pointer">
-                            <div class="w-full sm:w-16 h-64 bg-slate-900/50 border border-slate-800/40 rounded-t-xl flex items-end justify-center relative p-0.5">
-                                <div class="w-full rounded-t-lg bg-gradient-to-t ${colorClass} transition-all duration-700 ease-out shadow-lg group-hover:brightness-125" style="height:
+                        <div class="flex flex-col items-center flex-1 group">
+                            <div class="w-full sm:w-16 h-64 bg-slate-900/40 border border-slate-800/60 rounded-t-xl flex items-end justify-center relative p-0.5">
+                                <div class="w-full rounded-t-lg bg-gradient-to-t ${colorClass} transition-all duration-700 shadow-md group-hover:brightness-125" style="height: ${percentage}%;"></div>
+                                <span class="absolute -top-7 bg-[#111827] border border-slate-700 text-white font-mono font-bold text-[10px] px-2 py-0.5 rounded shadow-xl">${numericalValue.toLocaleString()} €</span>
+                            </div>
+                            <p class="text-[10px] font-bold text-slate-300 mt-3 truncate max-w-[80px]">${l.name}</p>
+                            <p class="text-[8px] text-slate-500 uppercase mt-0.5">${l.status}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                content.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800/40 pb-4">
+                        <div class="text-blue-500 font-bold text-xs uppercase tracking-wider">📈 STATISTIQUES FINANCIÈRES</div>
+                    </div>
+                    <div class="bg-[#0b0f19] border border-slate-800 p-6 rounded-2xl shadow-2xl relative">
+                        <div class="flex items-center justify-between mb-8">
+                            <div>
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Analyse des Budgets par Affaire</h4>
+                                <p class="text-[10px] text-slate-500 mt-1">Mise à jour dynamique à chaque modification de budget</p>
+                            </div>
+                            <div class="flex gap-4 text-[8px] font-bold uppercase">
+                                <div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-emerald-500"></span> Gagné</div>
+                                <div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-blue-500"></span> Proposition</div>
+                                <div class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-slate-500"></span> Prospect</div>
+                            </div>
+                        </div>
+                        <div class="relative pt-4">
+                            <div class="absolute inset-x-0 bottom-0 top-4 flex flex-col justify-between pointer-events-none opacity-20 text-[9px] text-slate-500 font-mono">
+                                <div class="border-b border-slate-700 w-full pb-1 text-right">25 000 €</div>
+                                <div class="border-b border-slate-700 w-full pb-1 text-right">15 000 €</div>
+                                <div class="border-b border-slate-700 w-full pb-1 text-right">5 000 €</div>
+                                <div class="w-full text-right">0 €</div>
+                            </div>
+                            <div class="flex items-end justify-around gap-4 h-64 border-b border-slate-800 relative z-10 pb-1">
+                                ${barsHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // --- PDF ENGINE ---
+        function downloadPDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont("Helvetica", "bold"); doc.text("ELITECRM CABINET - REVENUE REPORT", 14, 20);
+            doc.setFont("Helvetica", "normal"); doc.setFontSize(10);
+            doc.text("Généré le : " + new Date().toLocaleDateString(), 14, 28);
+            let y = 45;
+            appsData.leads.forEach(l => {
+                doc.text(`- Client: ${l.name} | Budget: ${l.budget} | Statut: ${l.status}`, 14, y);
+                y += 10;
+            });
+            doc.save("rapport-general.pdf");
+        }
+
+        function downloadSingleInvoice(id, client, amount, status) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont("Helvetica", "bold"); doc.text(`FACTURE N°${id}`, 14, 20);
+            doc.setFont("Helvetica", "normal"); doc.setFontSize(11);
+            doc.text(`Client : ${client}`, 14, 35);
+            doc.text(`Montant : ${amount}`, 14, 45);
+            doc.text(`Statut : ${status}`, 14, 55);
+            doc.save(`facture-${id}.pdf`);
+        }
+
+        // --- SESSION EXECUTION ---
+        initSession();
+        switchView('dashboard');
+    </script>
+</body>
+</html>
