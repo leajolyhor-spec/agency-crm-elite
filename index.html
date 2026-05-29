@@ -36,14 +36,17 @@
         .ambient-glow {
             box-shadow: 0 0 50px -10px rgba(59, 130, 246, 0.15);
         }
+        /* Masquer la scrollbar proprement */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased font-sans min-h-screen">
 
     <div class="lg:hidden flex items-center justify-between p-4 bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-between p-1.5 shadow-lg shadow-blue-500/20">
-                <i data-lucide="layers" class="w-full h-full text-white"></i>
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center p-1.5 shadow-lg shadow-blue-500/20">
+                <i data-lucide="layers" class="w-5 h-5 text-white"></i>
             </div>
             <span class="font-display font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Agency Elite</span>
         </div>
@@ -56,50 +59,67 @@
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0 lg:static lg:h-screen">
             <div class="p-6 hidden lg:flex items-center gap-3 border-b border-slate-800/50">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center p-2 shadow-lg shadow-blue-500/20">
-                    <i data-lucide="layers" class="w-full h-full text-white"></i>
+                    <i data-lucide="layers" class="w-5 h-5 text-white"></i>
                 </div>
                 <span class="font-display font-bold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Agency Elite</span>
             </div>
             
-            <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
-                <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 bg-blue-600/10 text-blue-400 border border-blue-500/20" data-view="dashboard">
+            <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto no-scrollbar">
+                <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200" data-view="dashboard">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Tableau de bord
                 </button>
-                <button onclick="switchView('leads')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800/50 hover:text-slate-200" data-view="leads">
-                    <i data-lucide="users" class="w-5 h-5"></i> Opportunités
+                <button onclick="switchView('leads')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200" data-view="leads">
+                    <i data-lucide="users" class="w-5 h-5"></i> Opportunités (Leads)
                 </button>
-                <button onclick="switchView('invoices')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800/50 hover:text-slate-200" data-view="invoices">
-                    <i data-lucide="file-text" class="w-5 h-5"></i> Facturation
+                <button onclick="switchView('pipeline')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200" data-view="pipeline">
+                    <i data-lucide="git-kanban" class="w-5 h-5"></i> Pipeline Kanban
+                </button>
+                <button onclick="switchView('planning')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200" data-view="planning">
+                    <i data-lucide="calendar" class="w-5 h-5"></i> Planning / Agenda
+                </button>
+                <button onclick="switchView('invoices')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200" data-view="invoices">
+                    <i data-lucide="file-text" class="w-5 h-5"></i> Facturation & PDF
                 </button>
             </nav>
 
             <div class="p-4 border-t border-slate-800/50 bg-slate-900/50">
-                <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/30 transition-all duration-200 cursor-pointer" onclick="toggleProfileMenu()">
-                    <div id="current-avatar" class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-white shadow-inner">LM</div>
+                <div class="flex items-center gap-3 p-2 rounded-xl bg-slate-800/40 border border-slate-700/30">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center font-bold text-white shadow-inner">LJ</div>
                     <div class="flex-1 min-w-0">
-                        <p id="current-name" class="text-sm font-semibold text-slate-200 truncate">Léa Joly</p>
-                        <p id="current-role" class="text-xs text-slate-400 truncate">Chef de Projet Senior</p>
+                        <p class="text-sm font-semibold text-slate-200 truncate">Léa Joly</p>
+                        <p class="text-xs text-slate-400 truncate">Chef de Projet Senior</p>
                     </div>
-                    <i data-lucide="chevron-up" class="w-4 h-4 text-slate-500"></i>
                 </div>
             </div>
         </aside>
 
-        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden"></div>
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden lg:hidden"></div>
 
-        <main class="flex-1 p-4 lg:p-8 overflow-x-hidden w-full">
+        <main class="flex-1 p-4 lg:p-8 overflow-x-hidden w-full bg-slate-950">
             <div id="content-area" class="max-w-7xl mx-auto space-y-6">
-                <h1 class="text-2xl lg:text-3xl font-display font-bold text-white">Bienvenue sur Agency Elite</h1>
-                <p class="text-slate-400">Sélectionnez un onglet dans le menu pour commencer.</p>
-            </div>
+                </div>
         </main>
     </div>
 
     <script>
-        // Init Lucide Icons
-        lucide.createIcons();
+        // Gestion de la Persistance Native (localStorage)
+        let leads = JSON.parse(localStorage.getItem('crm_leads')) || [
+            { id: 1, name: "Acme Corp", contact: "Thomas Martin", budget: "15 000 €", status: "Proposition", date: "2026-05-20" },
+            { id: 2, name: "Global Tech", contact: "Sophie Lucas", budget: "8 500 €", status: "Nouveau", date: "2026-05-25" },
+            { id: 3, name: "E-Commerce Enterprise", contact: "Marc Pivot", budget: "32 000 €", status: "Gagné", date: "2026-05-10" }
+        ];
 
-        // Mobile Menu Handling
+        let tasks = JSON.parse(localStorage.getItem('crm_tasks')) || [
+            { id: 1, title: "Rendez-vous démo Acme Corp", date: "2026-05-30", time: "10:30", type: "Client" },
+            { id: 2, title: "Relance Facture Global Tech", date: "2026-06-02", time: "14:00", type: "Interne" }
+        ];
+
+        function saveData() {
+            localStorage.setItem('crm_leads', JSON.stringify(leads));
+            localStorage.setItem('crm_tasks', JSON.stringify(tasks));
+        }
+
+        // Menu Mobile Toggle
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
@@ -112,16 +132,14 @@
         if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
         if(overlay) overlay.addEventListener('click', toggleMobileMenu);
 
-        // Simple Routing view switcher
+        // Système d'onglets dynamique
         function switchView(viewName) {
             const content = document.getElementById('content-area');
             
-            // Fermer le menu mobile si ouvert
             if(!sidebar.classList.contains('-translate-x-full')) {
                 toggleMobileMenu();
             }
 
-            // Mettre à jour les classes actives de la navigation
             document.querySelectorAll('.nav-item').forEach(item => {
                 if(item.getAttribute('data-view') === viewName) {
                     item.className = "nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 bg-blue-600/10 text-blue-400 border border-blue-500/20";
@@ -132,64 +150,175 @@
 
             if(viewName === 'dashboard') {
                 content.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h1 class="text-2xl lg:text-3xl font-display font-bold text-white">Tableau de bord exécutif</h1>
+                            <p class="text-slate-400 text-sm mt-0.5">Vue d'ensemble de la performance commerciale de l'agence.</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-xl self-start">
+                            <button onclick="alert('IA activée : Analyse du Pipeline en cours...')" class="bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-md shadow-blue-500/10 hover:bg-blue-700 transition">Assistant IA</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl ambient-glow">
-                            <p class="text-slate-400 text-sm font-medium">Chiffre d'Affaires</p>
-                            <p class="text-3xl font-display font-bold mt-2 text-white">48 250 €</p>
+                            <div class="flex justify-between items-start text-slate-400"><span class="text-sm font-medium">Chiffre d'Affaires</span><i data-lucide="dollar-sign" class="w-4 h-4"></i></div>
+                            <p class="text-3xl font-display font-bold mt-2 text-white">55 750 €</p>
+                            <span class="text-emerald-400 text-xs font-medium flex items-center gap-1 mt-2"><i data-lucide="trending-up" class="w-3 h-3"></i> +12% ce mois</span>
                         </div>
                         <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-                            <p class="text-slate-400 text-sm font-medium">Opportunités Actives</p>
-                            <p class="text-3xl font-display font-bold mt-2 text-white">12</p>
+                            <div class="flex justify-between items-start text-slate-400"><span class="text-sm font-medium">Opportunités Actives</span><i data-lucide="target" class="w-4 h-4"></i></div>
+                            <p class="text-3xl font-display font-bold mt-2 text-white">${leads.filter(l => l.status !== 'Gagné').length}</p>
+                            <span class="text-slate-400 text-xs">Suivi en temps réel</span>
                         </div>
-                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-                            <p class="text-slate-400 text-sm font-medium">Taux de Conversion</p>
-                            <p class="text-3xl font-display font-bold mt-2 text-white">68%</p>
+                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl sm:col-span-2 lg:col-span-1">
+                            <div class="flex justify-between items-start text-slate-400"><span class="text-sm font-medium">Taux de Conversion</span><i data-lucide="activity" class="w-4 h-4"></i></div>
+                            <p class="text-3xl font-display font-bold mt-2 text-white">74%</p>
+                            <span class="text-blue-400 text-xs font-medium flex items-center gap-1 mt-2">Excellent rendement</span>
                         </div>
                     </div>
                 `;
             } else if(viewName === 'leads') {
+                let rows = leads.map(l => `
+                    <tr class="border-b border-slate-800/40 hover:bg-slate-800/20 transition">
+                        <td class="p-4 text-white font-medium whitespace-nowrap">${l.name}</td>
+                        <td class="p-4 text-slate-300 whitespace-nowrap">${l.contact}</td>
+                        <td class="p-4 text-slate-300 whitespace-nowrap">${l.budget}</td>
+                        <td class="p-4 whitespace-nowrap"><span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">${l.status}</span></td>
+                    </tr>
+                `).join('');
+
                 content.innerHTML = `
-                    <h2 class="text-2xl font-display font-bold text-white mb-4">Opportunités Commerciales</h2>
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden overflow-x-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-display font-bold text-white">Opportunités (Leads)</h2>
+                        <button onclick="addLeadPrompt()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-2 rounded-xl flex items-center gap-1.5 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Nouveau</button>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden overflow-x-auto no-scrollbar shadow-xl">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="border-b border-slate-800 bg-slate-900/50">
-                                    <th class="p-4 text-slate-400 font-medium text-sm">Entreprise</th>
-                                    <th class="p-4 text-slate-400 font-medium text-sm">Budget</th>
-                                    <th class="p-4 text-slate-400 font-medium text-sm">Statut</th>
+                                    <th class="p-4 text-slate-400 font-medium text-xs tracking-wider uppercase">Entreprise</th>
+                                    <th class="p-4 text-slate-400 font-medium text-xs tracking-wider uppercase">Contact</th>
+                                    <th class="p-4 text-slate-400 font-medium text-xs tracking-wider uppercase">Budget</th>
+                                    <th class="p-4 text-slate-400 font-medium text-xs tracking-wider uppercase">Statut</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-800/50">
-                                <tr>
-                                    <td class="p-4 text-white font-medium">Acme Corp</td>
-                                    <td class="p-4 text-slate-300">15 000 €</td>
-                                    <td class="p-4"><span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">Proposition</span></td>
-                                </tr>
-                            </tbody>
+                            <tbody class="divide-y divide-slate-800/30">${rows}</tbody>
                         </table>
                     </div>
                 `;
+            } else if(viewName === 'pipeline') {
+                content.innerHTML = `
+                    <h2 class="text-2xl font-display font-bold text-white mb-2">Pipeline Kanban</h2>
+                    <p class="text-slate-400 text-sm mb-6">Suivez visuellement le cycle de vente de vos affaires.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl">
+                            <h3 class="text-sm font-semibold text-slate-300 mb-3 flex items-center justify-between"><span>À Contacter</span> <span class="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded-full">1</span></h3>
+                            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-md cursor-pointer hover:border-slate-700 transition">
+                                <p class="text-sm font-bold text-white">Global Tech</p>
+                                <p class="text-xs text-slate-400 mt-1">Budget : 8 500 €</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl">
+                            <h3 class="text-sm font-semibold text-slate-300 mb-3 flex items-center justify-between"><span>Proposition</span> <span class="bg-blue-900/20 text-blue-400 text-xs px-2 py-0.5 rounded-full">1</span></h3>
+                            <div class="bg-slate-900 border border-blue-900 p-4 rounded-xl shadow-md cursor-pointer hover:border-blue-800 transition">
+                                <p class="text-sm font-bold text-white">Acme Corp</p>
+                                <p class="text-xs text-slate-400 mt-1">Budget : 15 000 €</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl">
+                            <h3 class="text-sm font-semibold text-slate-300 mb-3 flex items-center justify-between"><span>Gagné</span> <span class="bg-emerald-900/20 text-emerald-400 text-xs px-2 py-0.5 rounded-full">1</span></h3>
+                            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-md cursor-pointer">
+                                <p class="text-sm font-bold text-white">E-Commerce Enterprise</p>
+                                <p class="text-xs text-slate-400 mt-1">Budget : 32 000 €</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if(viewName === 'planning') {
+                let agendaItems = tasks.map(t => `
+                    <div class="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800/80 rounded-xl hover:border-slate-700/50 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full ${t.type === 'Client' ? 'bg-blue-500' : 'bg-purple-500'}"></div>
+                            <div>
+                                <p class="text-sm font-medium text-white">${t.title}</p>
+                                <p class="text-xs text-slate-500 mt-0.5">${t.date} à ${t.time}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs bg-slate-900 text-slate-400 px-2.5 py-1 rounded-lg border border-slate-800">${t.type}</span>
+                    </div>
+                `).join('');
+
+                content.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="text-2xl font-display font-bold text-white">Planning & Agenda</h2>
+                        <button onclick="addTaskPrompt()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-2 rounded-xl flex items-center gap-1.5 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Ajouter</button>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3 shadow-xl">${agendaItems}</div>
+                `;
             } else if(viewName === 'invoices') {
                 content.innerHTML = `
-                    <h2 class="text-2xl font-display font-bold text-white mb-4">Facturation</h2>
-                    <p class="text-slate-400 mb-4">Historique des factures de l'agence.</p>
-                    <button onclick="generatePDF()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-xl inline-flex items-center gap-2 transition-all duration-200">
-                        <i data-lucide="download" class="w-4 h-4"></i> Générer un rapport PDF
-                    </button>
+                    <h2 class="text-2xl font-display font-bold text-white mb-2">Module de Facturation Embarqué</h2>
+                    <p class="text-slate-400 text-sm mb-6">Émettez des rapports d'activité et des factures clients instantanément au format PDF.</p>
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 shadow-xl max-w-xl">
+                        <h3 class="text-lg font-bold text-white border-b border-slate-800 pb-2">Rapport Mensuel Global</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-slate-400">Émetteur :</span><span class="text-white font-medium">Agency Elite Production</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Total Facturé :</span><span class="text-emerald-400 font-bold">55 750,00 €</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Statut fiscal :</span><span class="text-blue-400">À jour</span></div>
+                        </div>
+                        <button onclick="generatePDF()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/10 mt-2">
+                            <i data-lucide="download" class="w-4 h-4"></i> Générer et Télécharger le PDF
+                        </button>
+                    </div>
                 `;
             }
             lucide.createIcons();
         }
 
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("Rapport d'Activité - Agency Elite", 10, 10);
-            doc.text("Chiffre d'affaires global: 48 250 EUR", 10, 20);
-            doc.save("rapport-agency-elite.pdf");
+        // Fonctions d'interaction simples (Prompts dynamiques)
+        function addLeadPrompt() {
+            let name = prompt("Nom de l'entreprise :");
+            let contact = prompt("Nom du contact commercial :");
+            let budget = prompt("Budget estimé (ex: 5 000 €) :");
+            if(name && contact && budget) {
+                leads.push({ id: Date.now(), name, contact, budget, status: "Nouveau", date: new Date().toISOString().split('T')[0] });
+                saveData();
+                switchView('leads');
+            }
         }
 
-        // Chargement initial
+        function addTaskPrompt() {
+            let title = prompt("Intitulé de l'action / événement :");
+            let time = prompt("Heure (ex: 14:30) :");
+            if(title && time) {
+                tasks.push({ id: Date.now(), title, date: new Date().toISOString().split('T')[0], time, type: "Client" });
+                saveData();
+                switchView('planning');
+            }
+        }
+
+        // Moteur PDF natif (jsPDF UMD)
+        function generatePDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFont("Helvetica", "bold");
+                doc.text("AGENCY ELITE - COMPTE RENDU FINANCIER", 14, 20);
+                doc.setFontSize(11);
+                doc.setFont("Helvetica", "normal");
+                doc.text("Généré nativement via le module EliteCRM le " + new Date().toLocaleDateString(), 14, 28);
+                doc.text("-------------------------------------------------------------------------------------", 14, 35);
+                doc.text("Chiffre d'Affaires Global Sécurisé: 55 750,00 EUR", 14, 45);
+                doc.text("Taux d'accomplissement des objectifs: 94%", 14, 53);
+                doc.text("Nombre total d'affaires enregistrées: " + leads.length, 14, 61);
+                doc.save("rapport-activite-agency-elite.pdf");
+            } catch(e) {
+                alert("Erreur lors de la génération du PDF : " + e.message);
+            }
+        }
+
+        // Chargement initial du Tableau de Bord
         switchView('dashboard');
     </script>
 </body>
